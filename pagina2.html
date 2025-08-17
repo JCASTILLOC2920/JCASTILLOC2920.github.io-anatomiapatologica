@@ -1,0 +1,3698 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JC PATH LAB | Sistema de Gestión</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ESTILOS EXISTENTES (sin cambios) */
+        :root {
+            --primary: #1e88e5;
+            --primary-dark: #0d47a1;
+            --secondary: #ff9800;
+            --secondary-dark: #f57c00;
+            --text: #333;
+            --text-light: #666;
+            --bg: #f0f2f5;
+            --sidebar-bg: #2c3e50;
+            --sidebar-hover: #34495e;
+            --card-bg: #ffffff;
+            --border: #e0e0e0;
+            --success: #4caf50;
+            --error: #e53935;
+            --table-header: #e3f2fd;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            transition: all 0.3s ease;
+            z-index: 100;
+            overflow-y: auto;
+        }
+        
+        .logo {
+            padding: 25px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo i {
+            font-size: 28px;
+            color: var(--secondary);
+        }
+        
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .logo-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .logo-subtitle {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .menu {
+            padding: 20px 0;
+        }
+        
+        .menu-item {
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+        
+        .menu-item:hover, .menu-item.active {
+            background: var(--sidebar-hover);
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .menu-item i {
+            width: 24px;
+            text-align: center;
+            font-size: 18px;
+        }
+        
+        .sidebar-footer {
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: auto;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            transition: all 0.3s ease;
+            min-height: 100vh;
+        }
+        
+        .topbar {
+            background: var(--card-bg);
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .menu-toggle {
+            display: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text);
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .user-name {
+            font-weight: 500;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .card-header h1 {
+            font-size: 1.8rem;
+            margin: 0;
+        }
+        
+        .section {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            color: var(--primary-dark);
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(30, 136, 229, 0.2);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-group .form-group {
+            flex: 1;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1976d2, #0d47a1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--error);
+            color: var(--error);
+        }
+        
+        .btn-outline:hover {
+            background: var(--error);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .btn i {
+            margin-right: 8px;
+        }
+        
+        .buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            padding: 20px;
+        }
+        
+        .file-upload {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-upload:hover {
+            border-color: var(--primary);
+            background-color: #f0f7ff;
+        }
+        
+        .file-upload i {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .file-text {
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        .date-box {
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-dark));
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 15px 0;
+        }
+        
+        .date-label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        
+        .date-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        
+        .attention-group {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        
+        .attention-group .form-group {
+            flex: 1;
+        }
+        
+        .attention-group .btn {
+            height: fit-content;
+            margin-bottom: 15px;
+        }
+        
+        .confirmation-message {
+            background-color: #dff0d8;
+            border: 1px solid #d6e9c6;
+            border-radius: 4px;
+            color: #3c763d;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .confirmation-message.duplicate {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+            display: none;
+        }
+        
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+        
+        .filter-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        
+        .search-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            align-self: flex-end;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .results-container {
+            overflow-x: auto;
+            padding: 20px;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+        
+        .results-table th {
+            background-color: var(--table-header);
+            text-align: left;
+            padding: 15px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            border-bottom: 2px solid var(--primary);
+            border-right: 1px solid #d1d1d1;
+        }
+        
+        .results-table th:last-child {
+            border-right: none;
+        }
+        
+        .results-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid #eaeaea;
+        }
+        
+        .results-table td:last-child {
+            border-right: none;
+        }
+        
+        .results-table tr:hover {
+            background-color: #f5f9ff;
+        }
+        
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin: 0 5px;
+            transition: all 0.3s;
+        }
+        
+        .action-btn:hover {
+            color: var(--primary-dark);
+            transform: scale(1.1);
+        }
+        
+        .informe-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .informe-btn:hover {
+            background: #388e3c;
+            transform: translateY(-2px);
+        }
+
+        .delete-btn {
+            background: #fbe9e7;
+            color: #e53935;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+        
+        .delete-btn:hover {
+            background: #ffcdd2;
+            transform: scale(1.1);
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            gap: 10px;
+        }
+        
+        .page-btn {
+            padding: 8px 15px;
+            background: #f0f0f0;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .page-btn.active, .page-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .page-content {
+            display: none;
+        }
+        
+        .page-content.active {
+            display: block;
+        }
+        
+        /* Nuevo estilo para botón de agregar plantilla */
+        .add-template-btn {
+            background: linear-gradient(135deg, var(--success), #2e7d32);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .add-template-btn:hover {
+            background: linear-gradient(135deg, #43a047, #1b5e20);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Nuevos estilos para botón Firmar */
+        .btn-sign {
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+            color: white;
+        }
+        
+        .btn-sign:hover {
+            background: linear-gradient(135deg, #388e3c, #1b5e20);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Nuevos estilos para botón Guardar */
+        .btn-save {
+            background: linear-gradient(135deg, #2196F3, #0d47a1);
+            color: white;
+        }
+        
+        .btn-save:hover {
+            background: linear-gradient(135deg, #1976d2, #0b3d91);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Estilos para la nueva página de informe */
+        .data-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .data-header {
+            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+            padding: 15px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            padding: 20px;
+        }
+        
+        .data-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .data-label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .data-value {
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 8px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+
+        /* Campos editables en informe */
+        .editable-field {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+            font-family: inherit;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        
+        .editable-field:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(30, 136, 229, 0.2);
+        }
+        
+        .double-column {
+            grid-column: span 2;
+        }
+        
+        .doctor-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .doctor-info {
+            flex: 1;
+            margin-right: 20px;
+        }
+        
+        .delivery-info {
+            flex: 1;
+        }
+        
+        /* NUEVOS ESTILOS PARA EL PANEL DE DESCRIPCIONES */
+        .description-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .description-section {
+            flex: 1;
+            min-width: 300px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+        }
+        
+        .description-section h3 {
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .editor-container {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .editor-toolbar {
+            background: #f0f0f0;
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .editor-toolbar button {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .editor-toolbar button:hover {
+            background: #e9f7ff;
+            border-color: #1e88e5;
+        }
+        
+        .editor-content {
+            min-height: 150px;
+            padding: 12px;
+            background: white;
+            outline: none;
+        }
+        
+        /* ESTILOS PARA EL NUEVO CUADRO DE DIAGNÓSTICO */
+        .diagnostico-section {
+            width: 100%;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .diagnostico-section h3 {
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .diagnostico-container {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        /* ESTILOS PARA LAS FOTOS */
+        .photos-section {
+            margin-top: 20px;
+        }
+        
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+}
+        
+        .photo-upload {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 30px 20px;
+            text-align: center;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            transition: all 0.3s;
+            height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .photo-upload:hover {
+            border-color: var(--primary);
+            background-color: #f0f7ff;
+        }
+        
+        .photo-upload i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .photo-preview {
+            max-width: 100%;
+            max-height: 200px;
+            display: none;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        
+        .photo-text {
+            color: #777;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .photo-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .photo-btn {
+            padding: 6px 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+        
+        .photo-btn:hover {
+            background: var(--primary-dark);
+        }
+        
+        /* Responsive design */
+        @media (max-width: 860px) {
+            .sidebar {
+                width: 70px;
+                overflow: visible;
+            }
+            
+            .logo-text, .menu-text, .sidebar-footer {
+                display: none;
+            }
+            
+            .logo {
+                justify-content: center;
+                padding: 25px 10px;
+            }
+            
+            .menu-item {
+                justify-content: center;
+                padding: 18px 10px;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .attention-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .attention-group .btn {
+                margin-bottom: 0;
+                width: 100%;
+            }
+            
+            .buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .sidebar.active + .main-content {
+                margin-left: 0;
+            }
+            
+            .filters {
+                flex-direction: column;
+            }
+            
+            .filter-group {
+                min-width: 100%;
+            }
+            
+            .results-table {
+                min-width: 800px;
+            }
+            
+            .data-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .double-column {
+                grid-column: span 1;
+            }
+            
+            .doctor-section {
+                flex-direction: column;
+            }
+            
+            .doctor-info {
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+            
+            .description-container {
+                flex-direction: column;
+            }
+            
+            .diagnostico-section {
+                margin-top: 10px;
+            }
+            
+            .photos-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .card-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .section {
+                padding: 15px;
+            }
+            
+            .topbar {
+                padding: 15px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+            
+            .page-title {
+                font-size: 20px;
+            }
+            
+            .results-table th, 
+            .results-table td {
+                padding: 8px 10px;
+                font-size: 0.85rem;
+            }
+            
+            .user-info {
+                align-self: flex-end;
+            }
+            
+            .editor-toolbar {
+                gap: 3px;
+            }
+            
+            .editor-toolbar button {
+                padding: 4px 6px;
+            }
+            
+            .diagnostico-section {
+                padding: 10px;
+            }
+            
+            .photo-upload {
+                padding: 20px 15px;
+                height: 200px;
+            }
+        }
+
+        /* Altura constante para filas - MODIFICADO A 30px */
+        #medicos-results-table tbody tr,
+        #surgical-results-table tbody tr,
+        #cytological-results-table tbody tr {
+            height: 30px;
+            display: table-row;
+        }
+
+        #medicos-results-table tbody td,
+        #surgical-results-table tbody td,
+        #cytological-results-table tbody td {
+            max-height: 30px;
+            overflow-y: auto;
+            word-break: break-word;
+        }
+        
+        /* Nuevos estilos para botón modificar */
+        .modify-btn {
+            background: #e3f2fd;
+            color: #0d47a1;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+        
+        .modify-btn:hover {
+            background: #bbdefb;
+            transform: scale(1.1);
+        }
+        
+        .update-btn {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            color: white;
+        }
+        
+        .update-btn:hover {
+            background: linear-gradient(135deg, #f57c00, #e65100);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Estilos para la nueva página de plantillas */
+        .template-form {
+            padding: 20px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .editor-large {
+            min-height: 300px;
+        }
+        
+        .editor-toolbar-large {
+            padding: 10px;
+        }
+        
+        .editor-toolbar-large button {
+            padding: 8px 12px;
+            font-size: 1rem;
+        }
+        
+        .editor-toolbar-large i {
+            margin-right: 5px;
+        }
+        
+        .template-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        /* Nuevos estilos para diálogo de confirmación */
+        .confirmation-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .confirmation-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .confirmation-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        /* ESTILOS PARA EL NUEVO INFORME PRELIMINAR */
+        .preliminary-report {
+            padding: 30px;
+            background: white;
+            font-family: 'Times New Roman', serif;
+            color: #333;
+            line-height: 1.6;
+            max-width: 1044px; /* Ajustado para la imagen */
+            margin: 0 auto;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        
+        .report-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+        }
+        
+        /* Nuevo estilo para la imagen del encabezado */
+        .report-header img {
+            width: 100%;
+            max-width: 1044px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .patient-info {
+            margin-bottom: 25px;
+        }
+        
+        .patient-info h3 {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        
+        .patient-details {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        
+        .patient-detail {
+            flex: 1;
+            min-width: 200px;
+            margin-bottom: 5px;
+        }
+        
+        .dates-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .report-section {
+            margin-bottom: 25px;
+        }
+        
+        .report-section h3 {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .report-content {
+            padding-left: 20px;
+        }
+        
+        .diagnosis-section {
+            margin-top: 30px;
+            font-weight: bold;
+        }
+        
+        .diagnosis-title {
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .signature-section {
+            margin-top: 50px;
+            text-align: center;
+        }
+        
+        .signature-line {
+            display: inline-block;
+            width: 250px;
+            border-top: 1px solid #333;
+            margin-top: 40px;
+        }
+        
+        .signature-info {
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        
+        /* Estilo para resaltar el botón de informe preliminar */
+        #preliminary-btn {
+            background: linear-gradient(135deg, #9c27b0, #673ab7);
+        }
+        
+        #preliminary-btn:hover {
+            background: linear-gradient(135deg, #7b1fa2, #512da8);
+        }
+
+        /* Estilos para la imagen de firma */
+        .signature-image {
+            width: 211px;
+            height: 114px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* Nuevos estilos para las líneas decorativas */
+        .decorative-line {
+            width: 100%;
+            max-width: 1031px;
+            height: 7px;
+            display: block;
+            margin: 10px 0;
+        }
+
+        .page-footer {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .footer-image {
+            max-width: 100%;
+            height: auto;
+            max-height: 17px;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        /* NUEVOS ESTILOS ESPECÍFICOS PARA EL INFORME PRELIMINAR */
+        #informe-preliminar .preliminary-report {
+            font-family: Arial;
+            font-size: 10pt;
+            text-align: justify;
+        }
+        
+        #informe-preliminar .patient-detail strong,
+        #informe-preliminar .dates-info strong,
+        #informe-preliminar .report-section h3,
+        #informe-preliminar .diagnosis-title {
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        #informe-preliminar .patient-detail,
+        #informe-preliminar .dates-info div {
+            text-transform: uppercase;
+        }
+        
+        #informe-preliminar .diagnosis-title {
+            text-align: left;
+            font-size: 0.6rem; /* Diagnóstico reducido a la mitad */
+        }
+        
+        #informe-preliminar .footer-image {
+            width: 1044px;
+            max-width: 100%;
+            height: 24px;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        /* NUEVOS ESTILOS PARA LA TABLA DE DATOS DEL PACIENTE */
+        .patient-data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .patient-data-table td {
+            padding: 4px; /* Padding reducido para ahorrar espacio */
+            border: 1px solid #ddd;
+            vertical-align: top;
+            font-size: 9pt; /* Tamaño reducido */
+            line-height: 1.2; /* Espaciado reducido */
+        }
+        
+        .patient-data-table .codigo-cell {
+            font-size: 2.5em; /* 3 veces el tamaño normal */
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+            background-color: #f0f7ff;
+            padding: 2px 4px; /* Padding reducido */
+        }
+        
+        .patient-data-table .info-cell {
+            padding: 4px; /* Padding reducido */
+        }
+        
+        /* Reducción de tamaño para títulos */
+        #preliminary-report-content h3 {
+            font-size: 0.6rem;
+        }
+        
+        /* Estilos para el pie de página del informe */
+        .report-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-family: Arial;
+            width: 100%;
+        }
+        
+        .footer-left {
+            font-size: 9pt; /* Tamaño solicitado */
+            text-align: left;
+        }
+        
+        .footer-right {
+            font-size: 8pt; /* Tamaño solicitado */
+            text-align: right;
+        }
+        
+        .footer-right span {
+            margin-left: 10px;
+        }
+        
+        /* Alineación de la firma a la derecha */
+        #preliminary-report-content .signature-section {
+            text-align: right;
+        }
+
+        /* Eliminar línea inferior derecha */
+        #preliminary-report-content .signature-line {
+            display: none; /* Línea eliminada */
+        }
+    </style>
+</head>
+<body>
+    <!-- Menú lateral (sin cambios) -->
+    <aside class="sidebar">
+        <div class="logo">
+            <i class="fas fa-flask"></i>
+            <div class="logo-text">
+                <span class="logo-title">JC PATH LAB</span>
+                <span class="logo-subtitle">LABORATORIO DE ANATOMIA PATOLOGICA</span>
+            </div>
+        </div>
+        
+        <div class="menu">
+            <div class="menu-item active" data-link="registro-pacientes">
+                <i class="fas fa-user-injured"></i>
+                <span class="menu-text">Registro de pacientes</span>
+            </div>
+            <div class="menu-item" data-link="registro-medicos">
+                <i class="fas fa-user-md"></i>
+                <span class="menu-text">Registro de médicos</span>
+            </div>
+            <div class="menu-item" data-link="resultados-quirurgicos">
+                <i class="fas fa-clipboard-list"></i>
+                <span class="menu-text">Lista de resultados quirúrgicos</span>
+            </div>
+            <div class="menu-item" data-link="resultados-citologicos">
+                <i class="fas fa-microscope"></i>
+                <span class="menu-text">Lista de resultados citológicos</span>
+            </div>
+            <div class="menu-item" data-link="plantillas">
+                <i class="fas fa-file-alt"></i>
+                <span class="menu-text">Plantillas</span>
+            </div>
+        </div>
+        
+        <div class="sidebar-footer">
+            <p>Propietario:</p>
+            <p>Dr. Joseph Christopher Castillo Cuenca</p>
+        </div>
+    </aside>
+    
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="topbar">
+            <div class="topbar-left">
+                <div class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <div class="page-title" id="page-title">Registro de Pacientes</div>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">JC</div>
+                <div class="user-name">Dr. Castillo</div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- Página de registro de pacientes (modificado para separar nombres y apellidos) -->
+            <div id="registro-pacientes" class="page-content active">
+                <div class="container">
+                    <div class="card">
+                        <div class="card-header">
+                            <h1>REGISTRO PACIENTE</h1>
+                        </div>
+                        
+                        <div class="confirmation-message" id="confirmation-message">
+                            <i class="fas fa-check-circle"></i> Datos guardados correctamente
+                        </div>
+                        
+                        <div class="confirmation-message duplicate" id="duplicate-message">
+                            <i class="fas fa-exclamation-triangle"></i> Código duplicado, por favor ingrese otro código
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">Tipo Servicio</div>
+                            <div class="input-group">
+                                <div class="form-group">
+                                    <label for="service-type">TIPO DE SERVICIO</label>
+                                    <select id="service-type">
+                                        <option value="">Seleccione un servicio</option>
+                                        <option value="hematoxilina">ESTUDIO CON HEMATOXILINA EOSINA</option>
+                                        <option value="citologia">ESTUDIO DE CITOLOGIA</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">Datos del Paciente</div>
+                            
+                            <div class="attention-group">
+                                <div class="form-group">
+                                    <label for="attention-code">Cod. Atención</label>
+                                    <input type="text" id="attention-code">
+                                </div>
+                                <button class="btn btn-primary" id="validate-btn">
+                                    <i class="fas fa-check-circle"></i> Validar
+                                </button>
+                            </div>
+                            
+                            <div class="input-group">
+                                <div class="form-group">
+                                    <label for="dni">DNI</label>
+                                    <input type="text" id="dni">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="age">Edad</label>
+                                    <input type="number" id="age">
+                                </div>
+                            </div>
+                            
+                            <div class="input-group">
+                                <!-- Separar nombres y apellidos en dos campos -->
+                                <div class="form-group">
+                                    <label for="last-name">APELLIDOS</label>
+                                    <input type="text" id="last-name">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="first-name">NOMBRES</label>
+                                    <input type="text" id="first-name">
+                                </div>
+                            </div>
+                            
+                            <div class="input-group">
+                                <div class="form-group">
+                                    <label for="phone">Teléfono</label>
+                                    <input type="tel" id="phone">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="gender">Sexo</label>
+                                    <select id="gender">
+                                        <option value="">Seleccionar</option>
+                                        <option value="masculino">Masculino</option>
+                                        <option value="femenino">Femenino</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="input-group">
+                                <div class="form-group">
+                                    <label for="contact-date">F. Contacto (Familiar)</label>
+                                    <input type="text" id="contact-date" placeholder="Nombre del familiar">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="contact-phone">Tel. Contacto (Familiar)</label>
+                                    <input type="tel" id="contact-phone">
+                                </div>
+                            </div>
+                            
+                            <!-- CAMPO MODIFICADO: Ahora es un select con médicos -->
+                            <div class="form-group">
+                                <label for="requesting-doctor">Med. Solicitante</label>
+                                <select id="requesting-doctor">
+                                    <option value="">Seleccionar médico</option>
+                                    <!-- Los médicos se cargarán dinámicamente -->
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="study-reason">Motivo Estudio</label>
+                                <textarea id="study-reason" rows="3"></textarea>
+                            </div>
+                            
+                            <!-- CAMPO NUEVO: CLÍNICA DONDE PROVIENE LA MUESTRA -->
+                            <div class="form-group">
+                                <label for="clinic">Clínica donde proviene la muestra</label>
+                                <input type="text" id="clinic">
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">Orden Servicio</div>
+                            
+                            <div class="file-upload" id="orden-servicio-upload">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <div class="file-text">Elegir archivos (JPG)</div>
+                                <div class="file-text">Ningún archivo seleccionado</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Nuevo campo: Fecha de Registro -->
+                        <div class="date-box">
+                            <div class="date-label">Fecha de Registro</div>
+                            <div class="date-value" id="registration-date">2025-08-04</div>
+                        </div>
+                        
+                        <div class="date-box">
+                            <div class="date-label">Fec. Probable-Entrega</div>
+                            <div class="date-value" id="delivery-date">2025-08-06</div>
+                        </div>
+                        
+                        <div class="buttons">
+                            <button class="btn btn-outline">
+                                <i class="fas fa-door-open"></i> Salir
+                            </button>
+                            <button class="btn btn-primary" id="save-btn">
+                                <i class="fas fa-save"></i> Guardar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Página de registro de médicos (MODIFICADA) -->
+            <div id="registro-medicos" class="page-content">
+                <div class="container">
+                    <div class="card">
+                        <div class="card-header">
+                            <h1>REGISTRO DE MÉDICOS</h1>
+                        </div>
+                        
+                        <div class="filters">
+                            <div class="filter-group">
+                                <label for="search-nombre-med">Nombre del médico</label>
+                                <input type="text" id="search-nombre-med" placeholder="Ej: Juan" value="">
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="search-apellido-med">Apellido del médico</label>
+                                <input type="text" id="search-apellido-med" placeholder="Ej: Pérez" value="">
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="search-especialidad-med">Especialidad</label>
+                                <input type="text" id="search-especialidad-med" placeholder="Especialidad" value="">
+                            </div>
+                            
+                            <!-- Nuevos campos para registrar médico -->
+                            <div class="filter-group">
+                                <label for="sexo-med">Sexo</label>
+                                <select id="sexo-med">
+                                    <option value="">Seleccionar</option>
+                                    <option value="masculino">Masculino</option>
+                                    <option value="femenino">Femenino</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="clinica-med">Clínica de procedencia</label>
+                                <input type="text" id="clinica-med" placeholder="Clínica">
+                            </div>
+                            
+                            <button class="search-btn" id="search-btn-med">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                            
+                            <button class="search-btn" id="register-btn-med" style="background: linear-gradient(135deg, var(--success), #2e7d32);">
+                                <i class="fas fa-user-plus"></i> Registrar
+                            </button>
+                            
+                            <button class="search-btn update-btn" id="update-btn-med" style="display: none;">
+                                <i class="fas fa-sync-alt"></i> Actualizar
+                            </button>
+                            
+                            <button class="search-btn" id="cancel-btn-med" style="background: linear-gradient(135deg, #f57c00, #e64a19); display: none;">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                        
+                        <div class="results-container">
+                            <table class="results-table" id="medicos-results-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nº</th>
+                                        <th>APELLIDOS</th>
+                                        <th>NOMBRES</th>
+                                        <th>SEXO</th>
+                                        <th>ESPECIALIDAD</th>
+                                        <th>CLINICA DE PROCEDENCIA</th>
+                                        <th>MODIFICAR</th>
+                                        <th>ELIMINAR</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Datos de ejemplo para médicos MODIFICADOS -->
+                                    <tr>
+                                        <td>1</td>
+                                        <td>González Pérez</td>
+                                        <td>Carlos</td>
+                                        <td>Masculino</td>
+                                        <td>Patología General</td>
+                                        <td>Clínica Central</td>
+                                        <td>
+                                            <button class="modify-btn" title="Modificar médico">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <button class="delete-btn" title="Eliminar médico">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>López Martínez</td>
+                                        <td>María</td>
+                                        <td>Femenino</td>
+                                        <td>Citología</td>
+                                        <td>Clínica Norte</td>
+                                        <td>
+                                            <button class="modify-btn" title="Modificar médico">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <button class="delete-btn" title="Eliminar médico">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="pagination" id="pagination-med">
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <button class="page-btn">4</button>
+                            <button class="page-btn">5</button>
+                            <button class="page-btn">Siguiente</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Página de resultados quirúrgicos (modificada) -->
+            <div id="resultados-quirurgicos" class="page-content">
+                <div class="container">
+                    <div class="card">
+                        <div class="card-header">
+                            <h1>RESULTADOS QUIRÚRGICOS</h1>
+                        </div>
+                        
+                        <div class="filters">
+                            <div class="filter-group">
+                                <label for="search-cod">Código de Atención</label>
+                                <input type="text" id="search-cod" placeholder="Ej: 1 250-402" value="">
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="search-dni">DNI</label>
+                                <input type="text" id="search-dni" placeholder="Ej: 42560314" value="">
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="search-paciente">Paciente</label>
+                                <input type="text" id="search-paciente" placeholder="Nombre del paciente" value="">
+                            </div>
+                            
+                            <button class="search-btn" id="search-btn">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                        </div>
+                        
+                        <div class="results-container">
+                            <table class="results-table" id="surgical-results-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nº</th>
+                                        <th>COD-ATENCIÓN</th>
+                                        <th>DNI</th>
+                                        <th>EDAD</th>
+                                        <th>APELLIDOS</th>
+                                        <th>NOMBRES</th>
+                                        <th>SEXO</th>
+                                        <th>MED. SOLICITANTE</th>
+                                        <!-- Columna "MOTIVO DE ESTUDIO" eliminada -->
+                                        <th>CLINICA DE PROCEDENCIA</th>
+                                        <th>FECHA DE REGISTRO</th>
+                                        <th>FECHA DE INFORME</th>
+                                        <th>INFORME</th>
+                                        <th>ELIMINAR</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Los datos se cargarán dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="pagination" id="pagination">
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <button class="page-btn">4</button>
+                            <button class="page-btn">5</button>
+                            <button class="page-btn">Siguiente</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Página de resultados citológicos (modificada) -->
+            <div id="resultados-citologicos" class="page-content">
+                <div class="container">
+                    <div class="card">
+                        <div class="card-header">
+                            <h1>RESULTADOS CITOLÓGICOS</h1>
+                        </div>
+                        
+                        <div class="filters">
+                            <div class="filter-group">
+                                <label for="search-cod-cito">Código de Atención</label>
+                                <input type="text" id="search-cod-cito" placeholder="Ej: 1 250-402" value="">
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="search-dni-cito">DNI</label>
+                                <input type="text" id="search-dni-cito" placeholder="Ej: 42560314" value="">
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="search-paciente-cito">Paciente</label>
+                                <input type="text" id="search-paciente-cito" placeholder="Nombre del paciente" value="">
+                            </div>
+                            
+                            <button class="search-btn" id="search-btn-cito">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                        </div>
+                        
+                        <div class="results-container">
+                            <table class="results-table" id="cytological-results-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nº</th>
+                                        <th>COD-ATENCIÓN</th>
+                                        <th>DNI</th>
+                                        <th>EDAD</th>
+                                        <th>APELLIDOS</th>
+                                        <th>NOMBRES</th>
+                                        <th>SEXO</th>
+                                        <th>MED. SOLICITANTE</th>
+                                        <!-- Columna "MOTIVO DE ESTUDIO" eliminada -->
+                                        <th>CLINICA DE PROCEDENCIA</th>
+                                        <th>FECHA DE REGISTRO</th>
+                                        <th>FECHA DE INFORME</th>
+                                        <th>INFORME</th>
+                                        <th>ELIMINAR</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Los datos se cargarán dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="pagination" id="pagination-cito">
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <button class="page-btn">4</button>
+                            <button class="page-btn">5</button>
+                            <button class="page-btn">Siguiente</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Página de plantillas (modificada) -->
+            <div id="plantillas" class="page-content">
+                <div class="container">
+                    <div class="card">
+                        <div class="card-header">
+                            <h1>PLANTILLAS</h1>
+                        </div>
+                        
+                        <!-- Filtros de búsqueda modificados -->
+                        <div class="filters">
+                            <div class="filter-group">
+                                <label for="search-nombre-plantilla">Nombre de Plantilla</label>
+                                <input type="text" id="search-nombre-plantilla" placeholder="Buscar plantilla..." value="">
+                            </div>
+                            
+                            <button class="search-btn" id="search-btn-plant">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                            
+                            <button class="add-template-btn" id="add-template-btn">
+                                <i class="fas fa-plus-circle"></i> Agregar Plantilla
+                            </button>
+                        </div>
+                        
+                        <!-- Tabla de resultados modificada -->
+                        <div class="results-container">
+                            <table class="results-table" id="plantillas-results-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nº</th>
+                                        <th>ESPECIALIDAD</th>
+                                        <th>TIPO DE PLANTILLA</th>
+                                        <th>NOMBRE DE PLANTILLA</th>
+                                        <th>ACCIONES</th>
+                                        <th>ELIMINAR</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Los datos se cargarán dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="pagination" id="pagination-plant">
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <button class="page-btn">4</button>
+                            <button class="page-btn">5</button>
+                            <button class="page-btn">Siguiente</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Página para ver el informe (MODIFICADA) -->
+            <div id="ver-informe" class="page-content">
+                <div class="container">
+                    <div class="card">
+                        <div class="card-header">
+                            <h1>INFORME DE PATOLOGÍA</h1>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">Datos del Servicio</div>
+                            
+                            <div class="data-card">
+                                <div class="data-grid">
+                                    <div class="data-item">
+                                        <span class="data-label">Cod. Atención</span>
+                                        <div class="data-value" id="informe-cod-atencion">2KQ-402</div>
+                                    </div>
+                                    <div class="data-item">
+                                        <span class="data-label">DNI</span>
+                                        <input type="text" class="editable-field" id="informe-dni" value="4:26/03:14">
+                                    </div>
+                                    <div class="data-item">
+                                        <span class="data-label">Sexo</span>
+                                        <div class="data-value" id="informe-sexo">FEMENINO</div>
+                                    </div>
+                                    
+                                    <!-- Separar nombre en apellidos y nombres -->
+                                    <div class="data-item">
+                                        <span class="data-label">Apellidos</span>
+                                        <input type="text" class="editable-field" id="informe-apellidos" value="VARGAS LOZANO">
+                                    </div>
+                                    <div class="data-item">
+                                        <span class="data-label">Nombres</span>
+                                        <input type="text" class="editable-field" id="informe-nombres" value="ROSA">
+                                    </div>
+                                    
+                                    <div class="data-item">
+                                        <span class="data-label">Edad</span>
+                                        <input type="text" class="editable-field" id="informe-edad" value="40">
+                                    </div>
+                                    <div class="data-item">
+                                        <span class="data-label">Teléfono</span>
+                                        <input type="text" class="editable-field" id="informe-telefono" value="-">
+                                    </div>
+                                    <div class="data-item">
+                                        <span class="data-label">F. Contacto</span>
+                                        <input type="text" class="editable-field" id="informe-contacto" value="-">
+                                    </div>
+                                    <div class="data-item">
+                                        <span class="data-label">Tel. Contacto</span>
+                                        <input type="text" class="editable-field" id="informe-tel-contacto" value="-">
+                                    </div>
+                                    <!-- Nuevo campo: Clínica de donde proviene la muestra -->
+                                    <div class="data-item">
+                                        <span class="data-label">Clínica de donde proviene la muestra</span>
+                                        <input type="text" class="editable-field" id="informe-clinica" value="-">
+                                    </div>
+                                    <div class="data-item">
+                                        <span class="data-label">Med. Solicitante</label>
+                                        <input type="text" class="editable-field" id="informe-medico" value="-">
+                                    </div>
+                                    <div class="data-item double-column">
+                                        <span class="data-label">Motivo Estudio</span>
+                                        <textarea class="editable-field" id="informe-motivo" rows="3">GRANULONA VULVAR</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="doctor-section">
+                                <!-- Nuevo campo: Fecha de Registro -->
+                                <div class="doctor-info">
+                                    <div class="data-item">
+                                        <span class="data-label">Fecha de Registro</span>
+                                        <div class="data-value" id="fecha-registro">2025-08-04</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="delivery-info">
+                                    <div class="data-item">
+                                        <span class="data-label">Fec. Probable Entrega</span>
+                                        <div class="data-value" id="fecha-entrega">2025-08-06</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="doctor-info">
+                                    <div class="data-item">
+                                        <span class="data-label">Doctor</span>
+                                        <div class="data-value">SELECTIONS</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Se eliminó la sección de casetes -->
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">Descripción Macro y Microscópica</div>
+                            
+                            <div class="description-container">
+                                <!-- Sección Macroscópica (con plantilla restaurada) -->
+                                <div class="description-section">
+                                    <h3>Descripción Macroscópica</h3>
+                                    
+                                    <!-- CUADRO DE PLANTILLA MACROSCÓPICA RESTAURADO -->
+                                    <div class="form-group">
+                                        <label for="plantilla-macro">Plantilla Macroscópica</label>
+                                        <select id="plantilla-macro" class="template-select">
+                                            <option value="">Seleccionar plantilla</option>
+                                            <option value="1">Plantilla estándar de biopsia</option>
+                                            <option value="2">Plantilla de pieza quirúrgica</option>
+                                            <option value="3">Plantilla de tumor</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="editor-container">
+                                        <div class="editor-toolbar">
+                                            <button type="button" class="format-btn" data-command="bold" title="Negrita">
+                                                <i class="fas fa-bold"></i>
+                                            </button>
+                                            <button type="button" class="format-btn" data-command="italic" title="Cursiva">
+                                                <i class="fas fa-italic"></i>
+                                            </button>
+                                            <button type="button" class="format-btn" data-command="underline" title="Subrayado">
+                                                <i class="fas fa-underline"></i>
+                                            </button>
+                                            <button type="button" class="format-btn" data-command="insertUnorderedList" title="Lista">
+                                                <i class="fas fa-list-ul"></i>
+                                            </button>
+                                            <button type="button" class="format-btn" data-command="insertOrderedList" title="Lista numerada">
+                                                <i class="fas fa-list-ol"></i>
+                                            </button>
+                                        </div>
+                                        <div class="editor-content" id="macro-editor" contenteditable="true">
+                                            Se reciben múltiples fragmentos irregulares de tejido, de coloración marrón rojiza, de consistencia blanda, el mayor de 0.8 x 0.5 x 0.3 cm.
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Sección Microscópica (con plantilla restaurada) -->
+                                <div class="description-section">
+                                    <h3>Descripción Microscópica</h3>
+                                    
+                                    <!-- CUADRO DE PLANTILLA MICROSCÓPICA RESTAURADO -->
+                                    <div class="form-group">
+                                        <label for="plantilla-micro">Plantilla Microscópica</label>
+                                        <select id="plantilla-micro" class="template-select">
+                                            <option value="">Seleccionar plantilla</option>
+                                            <option value="1">Plantilla de inflamación crónica</option>
+                                            <option value="2">Plantilla de neoplasia benigna</option>
+                                            <option value="3">Plantilla de carcinoma</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="editor-container">
+                                        <div class="editor-toolbar">
+                                            <button type="button" class="format-btn" data-command="bold" title="Negrita">
+                                                <i class="fas fa-bold"></i>
+                                            </button>
+                                            <button type="button" class="format-btn" data-command="italic" title="Cursiva">
+                                                <i class="fas fa-italic"></i>
+                                            </button>
+                                            <button type="button" class="format-btn" data-command="underline" title="Subrayado">
+                                                <i class="fas fa-underline"></i>
+                                            </button>
+                                            <button type="button" class="format-btn" data-command="insertUnorderedList" title="Lista">
+                                                <i class="fas fa-list-ul"></i>
+                                            </button>
+                                            <button type="button" class="format-btn" data-command="insertOrderedList" title="Lista numerada">
+                                                <i class="fas fa-list-ol"></i>
+                                            </button>
+                                        </div>
+                                        <div class="editor-content" id="micro-editor" contenteditable="true">
+                                            Se observa tejido de granulación con abundantes células inflamatorias crónicas (linfocitos, plasmocitos) y presencia de células gigantes multinucleadas. No se observa evidencia de malignidad.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- NUEVO CUADRO DE DIAGNÓSTICO -->
+                            <div class="diagnostico-section">
+                                <h3>Diagnóstico</h3>
+                                <div class="diagnostico-container">
+                                    <div class="editor-toolbar">
+                                        <button type="button" class="format-btn" data-command="bold" title="Negrita">
+                                            <i class="fas fa-bold"></i>
+                                        </button>
+                                        <button type="button" class="format-btn" data-command="italic" title="Cursiva">
+                                            <i class="fas fa-italic"></i>
+                                        </button>
+                                        <button type="button" class="format-btn" data-command="underline" title="Subrayado">
+                                            <i class="fas fa-underline"></i>
+                                        </button>
+                                        <button type="button" class="format-btn" data-command="insertUnorderedList" title="Lista">
+                                            <i class="fas fa-list-ul"></i>
+                                        </button>
+                                        <button type="button" class="format-btn" data-command="insertOrderedList" title="Lista numerada">
+                                            <i class="fas fa-list-ol"></i>
+                                        </button>
+                                        <button type="button" class="format-btn" title="Centrar texto" data-command="justifyCenter">
+                                            <i class="fas fa-align-center"></i>
+                                        </button>
+                                        <button type="button" class="format-btn" title="Texto a la izquierda" data-command="justifyLeft">
+                                            <i class="fas fa-align-left"></i>
+                                        </button>
+                                        <button type="button" class="format-btn" title="Texto a la derecha" data-command="justifyRight">
+                                            <i class="fas fa-align-right"></i>
+                                        </button>
+                                    </div>
+                                    <div class="editor-content" id="diagnostico-editor" contenteditable="true">
+                                        Granuloma piógeno.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- NUEVA SECCIÓN PARA SUBIR FOTOS -->
+                            <div class="photos-section">
+                                <h3>Fotos Adjuntas</h3>
+                                <div class="photos-grid">
+                                    <div class="photo-upload" id="photo-1">
+                                        <i class="fas fa-camera"></i>
+                                        <div class="photo-text">Haga clic o arrastre una foto (JPG)</div>
+                                        <img class="photo-preview" id="preview-1" alt="Vista previa de la foto">
+                                        <div class="photo-controls" style="display: none;" id="controls-1">
+                                            <button class="photo-btn" onclick="document.getElementById('photo-input-1').click()">
+                                                <i class="fas fa-sync"></i> Cambiar
+                                            </button>
+                                            <button class="photo-btn" onclick="removePhoto(1)">
+                                                <i class="fas fa-trash"></i> Eliminar
+                                            </button>
+                                        </div>
+                                        <input type="file" id="photo-input-1" accept="image/jpeg" style="display: none;">
+                                    </div>
+                                    
+                                    <div class="photo-upload" id="photo-2">
+                                        <i class="fas fa-camera"></i>
+                                        <div class="photo-text">Haga clic o arrastre una foto (JPG)</div>
+                                        <img class="photo-preview" id="preview-2" alt="Vista previa de la foto">
+                                        <div class="photo-controls" style="display: none;" id="controls-2">
+                                            <button class="photo-btn" onclick="document.getElementById('photo-input-2').click()">
+                                                <i class="fas fa-sync"></i> Cambiar
+                                            </button>
+                                            <button class="photo-btn" onclick="removePhoto(2)">
+                                                <i class="fas fa-trash"></i> Eliminar
+                                            </button>
+                                        </div>
+                                        <input type="file" id="photo-input-2" accept="image/jpeg" style="display: none;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="buttons">
+                            <button class="btn btn-outline" id="volver-btn">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </button>
+                            <!-- Botón "Informe Preliminar" corregido -->
+                            <button class="btn btn-primary" id="preliminary-btn">
+                                <i class="fas fa-print"></i> Informe Preliminar
+                            </button>
+                            <!-- Nuevo botón Guardar -->
+                            <button class="btn btn-save" id="guardar-btn">
+                                <i class="fas fa-save"></i> Guardar
+                            </button>
+                            <!-- Nuevo botón Firmar -->
+                            <button class="btn btn-sign" id="firmar-btn">
+                                <i class="fas fa-signature"></i> Firmar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Página para agregar/editar plantilla (MODIFICADA) -->
+            <div id="agregar-plantilla" class="page-content">
+                <div class="container">
+                    <div class="card">
+                        <div class="card-header">
+                            <h1>REGISTRO PLANTILLA</h1>
+                        </div>
+                        
+                        <div class="template-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="tipo-plantilla">Tipo</label>
+                                    <select id="tipo-plantilla">
+                                        <option value="">SELECCIONAR</option>
+                                        <option value="PLANTILLA MACROSCÓPICA">PLANTILLA MACROSCÓPICA</option>
+                                        <option value="PLANTILLA MICROSCÓPICA">PLANTILLA MICROSCÓPICA</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="especialidad-plantilla">Especialidad</label>
+                                    <select id="especialidad-plantilla">
+                                        <option value="">SELECCIONAR</option>
+                                        <option value="Dermatología">Dermatología</option>
+                                        <option value="Ginecología">Ginecología</option>
+                                        <option value="Cabeza y Cuello">Cabeza y Cuello</option>
+                                        <option value="Cirugía General">Cirugía General</option>
+                                        <option value="Apéndice Cecal">Apéndice Cecal</option>
+                                        <option value="Vesícula Biliar">Vesícula Biliar</option>
+                                        <option value="Tumor de Partes Blandas">Tumor de Partes Blandas</option>
+                                        <option value="Gastroenterología">Gastroenterología</option>
+                                        <option value="Urología">Urología</option>
+                                        <option value="Neurocirugía">Neurocirugía</option>
+                                        <option value="Citología">Citología</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="nombre-plantilla">Plantilla</label>
+                                    <input type="text" id="nombre-plantilla" placeholder="Nombre de la plantilla">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="contenido-plantilla">Contenido</label>
+                                <div class="editor-container">
+                                    <div class="editor-toolbar editor-toolbar-large">
+                                        <button type="button" class="format-btn" data-command="bold" title="Negrita">
+                                            <i class="fas fa-bold"></i> B
+                                        </button>
+                                        <button type="button" class="format-btn" data-command="italic" title="Cursiva">
+                                            <i class="fas fa-italic"></i> I
+                                        </button>
+                                        <button type="button" class="format-btn" data-command="underline" title="Subrayado">
+                                            <i class="fas fa-underline"></i> U
+                                        </button>
+                                        <button type="button" class="format-btn" title="Centrar texto" data-command="justifyCenter">
+                                            <i class="fas fa-align-center"></i> ✅
+                                        </button>
+                                        <button type="button" class="format-btn" title="Fuente">
+                                            <i class="fas fa-font"></i> Fuente
+                                            <select id="font-family" onchange="formatDoc('fontName', this.value)" style="margin-left: 5px;">
+                                                <option value="Arial">Arial</option>
+                                                <option value="Tahoma">Tahoma</option>
+                                                <option value="Times New Roman">Times New Roman</option>
+                                            </select>
+                                        </button>
+                                        <button type="button" class="format-btn" title="Tamaño de fuente">
+                                            <i class="fas fa-text-height"></i> Tamaño
+                                            <select id="font-size" onchange="formatDoc('fontSize', this.value)" style="margin-left: 5px;">
+                                                <option value="1">Pequeño</option>
+                                                <option value="3" selected>Normal</option>
+                                                <option value="6">Grande</option>
+                                            </select>
+                                        </button>
+                                    </div>
+                                    <div class="editor-content editor-large" id="contenido-plantilla" contenteditable="true">
+                                        <!-- Contenido editable -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="template-actions">
+                                <button class="btn btn-outline" id="salir-plantilla-btn">
+                                    <i class="fas fa-door-open"></i> Salir
+                                </button>
+                                <button class="btn btn-primary" id="guardar-plantilla-btn">
+                                    <i class="fas fa-save"></i> Guardar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Diálogo de confirmación para salir sin guardar -->
+            <div class="confirmation-dialog" id="confirm-exit-dialog" style="display: none;">
+                <div class="confirmation-content">
+                    <h3>¿Salir sin guardar cambios?</h3>
+                    <p>¿Está seguro de que desea salir de la sección "Registro Plantilla" sin guardar los cambios?</p>
+                    <div class="confirmation-buttons">
+                        <button class="btn btn-outline" id="confirm-exit-no">No</button>
+                        <button class="btn btn-primary" id="confirm-exit-yes">Sí</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- NUEVA SECCIÓN PARA INFORME PRELIMINAR -->
+            <div id="informe-preliminar" class="page-content">
+                <div class="container">
+                    <div class="card">
+                        <div class="card-header">
+                            <h1>INFORME PRELIMINAR</h1>
+                        </div>
+                        
+                        <div class="preliminary-report" id="preliminary-report-content">
+                            <!-- El contenido se generará dinámicamente -->
+                        </div>
+                        
+                        <div class="buttons">
+                            <button class="btn btn-primary" id="back-to-report-btn">
+                                <i class="fas fa-arrow-left"></i> Volver al Informe
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables para almacenar los datos del paciente
+        let pacienteData = {
+            codAtencion: '',
+            dni: '',
+            edad: '',
+            nombres: '',
+            apellidos: '',
+            telefono: '',
+            sexo: '',
+            contactoFamiliar: '',
+            telefonoContacto: '',
+            medicoSolicitante: '',
+            motivoEstudio: '',
+            clinica: '',
+            tipoServicio: ''
+        };
+        
+        // Variables para almacenar datos de informes
+        let surgicalReports = JSON.parse(localStorage.getItem('surgicalReports')) || {};
+        let cytologicalReports = JSON.parse(localStorage.getItem('cytologicalReports')) || {};
+        
+        // Almacenamiento para los datos quirúrgicos
+        let surgicalData = JSON.parse(localStorage.getItem('surgicalData')) || [];
+        
+        // Almacenamiento para los datos citológicos
+        let cytologicalData = JSON.parse(localStorage.getItem('cytologicalData')) || [];
+        
+        // Variables globales para seguimiento del informe actual
+        let currentReportType = null;
+        let currentCodAtencion = null;
+        
+        // Almacenamiento para médicos
+        let doctorsData = JSON.parse(localStorage.getItem('doctorsData')) || [
+            { 
+                id: 1, 
+                apellidos: "González Pérez", 
+                nombres: "Carlos", 
+                sexo: "Masculino", 
+                especialidad: "Patología General", 
+                clinica: "Clínica Central" 
+            },
+            { 
+                id: 2, 
+                apellidos: "López Martínez", 
+                nombres: "María", 
+                sexo: "Femenino", 
+                especialidad: "Citología", 
+                clinica: "Clínica Norte" 
+            }
+        ];
+        
+        // Variables para edición de médicos
+        let currentDoctorIndex = null;
+        
+        // Almacenamiento para plantillas
+        let plantillasData = JSON.parse(localStorage.getItem('plantillasData')) || [];
+        let currentPlantillaId = null;
+        let plantillaModified = false;
+        
+        // Función para obtener fecha actual en Perú (Lima)
+        function getCurrentDatePeru() {
+            // Obtener fecha actual en UTC
+            const now = new Date();
+            // Ajustar a la zona horaria de Perú (UTC-5)
+            const offset = -5;
+            const peruTime = new Date(now.getTime() + (offset * 60 * 60 * 1000));
+            
+            // Formatear en dd/mm/yyyy
+            const day = String(peruTime.getDate()).padStart(2, '0');
+            const month = String(peruTime.getMonth() + 1).padStart(2, '0');
+            const year = peruTime.getFullYear();
+            
+            return `${day}/${month}/${year}`;
+        }
+        
+        // Función para obtener fecha de entrega (+4 días)
+        function getDeliveryDate() {
+            // Obtener fecha actual en UTC
+            const now = new Date();
+            // Ajustar a la zona horaria de Perú (UTC-5)
+            const offset = -5;
+            const peruTime = new Date(now.getTime() + (offset * 60 * 60 * 1000));
+            
+            // Sumar 4 días
+            const deliveryDate = new Date(peruTime);
+            deliveryDate.setDate(deliveryDate.getDate() + 4);
+            
+            // Formatear en dd/mm/yyyy
+            const day = String(deliveryDate.getDate()).padStart(2, '0');
+            const month = String(deliveryDate.getMonth() + 1).padStart(2, '0');
+            const year = deliveryDate.getFullYear();
+            
+            return `${day}/${month}/${year}`;
+        }
+        
+        // Función para obtener año actual en 2 dígitos
+        function getCurrentYearTwoDigits() {
+            return new Date().getFullYear().toString().slice(-2);
+        }
+        
+        // Función para actualizar prefijo según tipo de servicio
+        function updateCodigoPrefijo() {
+            const serviceType = document.getElementById('service-type').value;
+            const year = getCurrentYearTwoDigits();
+            
+            if (serviceType === 'hematoxilina') {
+                document.getElementById('attention-code').value = year + 'Q-';
+            } else if (serviceType === 'citologia') {
+                document.getElementById('attention-code').value = year + 'C-';
+            }
+        }
+        
+        // Función para validar DNI (solo números)
+        function validateDNI(input) {
+            input.value = input.value.replace(/\D/g, '');
+        }
+        
+        // Función para validar edad (solo números)
+        function validateAge(input) {
+            input.value = input.value.replace(/\D/g, '');
+        }
+        
+        // Función para convertir a mayúsculas
+        function convertToUppercase(input) {
+            input.value = input.value.toUpperCase();
+        }
+        
+        // Cargar plantillas en la tabla
+        function loadPlantillasTable() {
+            const tableBody = document.querySelector('#plantillas-results-table tbody');
+            tableBody.innerHTML = '';
+            
+            plantillasData.forEach((plantilla, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${plantilla.especialidad}</td>
+                    <td>${plantilla.tipo}</td>
+                    <td>${plantilla.nombre}</td>
+                    <td>
+                        <button class="btn btn-primary editar-plantilla-btn" data-id="${plantilla.id}" style="padding: 8px 12px; font-size: 0.9rem;">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                    </td>
+                    <td>
+                        <button class="delete-btn eliminar-plantilla-btn" title="Eliminar plantilla" data-id="${plantilla.id}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            // Agregar event listeners a los botones de editar
+            document.querySelectorAll('.editar-plantilla-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    editarPlantilla(id);
+                });
+            });
+            
+            // Agregar event listeners a los botones de eliminar
+            document.querySelectorAll('.eliminar-plantilla-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    eliminarPlantilla(id);
+                });
+            });
+        }
+        
+        // Función para editar una plantilla
+        function editarPlantilla(id) {
+            const plantilla = plantillasData.find(p => p.id === id);
+            if (!plantilla) return;
+            
+            // Llenar el formulario con los datos de la plantilla
+            document.getElementById('tipo-plantilla').value = plantilla.tipo;
+            document.getElementById('especialidad-plantilla').value = plantilla.especialidad;
+            document.getElementById('nombre-plantilla').value = plantilla.nombre;
+            document.getElementById('contenido-plantilla').innerHTML = plantilla.contenido;
+            
+            // Establecer que estamos en modo edición
+            currentPlantillaId = id;
+            plantillaModified = false;
+            
+            // Mostrar la página de registro de plantillas
+            showPage('agregar-plantilla');
+        }
+        
+        // Función para eliminar una plantilla
+        function eliminarPlantilla(id) {
+            if (confirm('¿Está seguro de eliminar esta plantilla?')) {
+                plantillasData = plantillasData.filter(p => p.id !== id);
+                localStorage.setItem('plantillasData', JSON.stringify(plantillasData));
+                loadPlantillasTable();
+                alert('Plantilla eliminada correctamente');
+            }
+        }
+        
+        // Función para guardar una plantilla (nueva o existente)
+        function guardarPlantilla() {
+            const tipo = document.getElementById('tipo-plantilla').value;
+            const especialidad = document.getElementById('especialidad-plantilla').value;
+            const nombre = document.getElementById('nombre-plantilla').value;
+            const contenido = document.getElementById('contenido-plantilla').innerHTML;
+            
+            if (!tipo || !especialidad || !nombre || !contenido) {
+                alert('Por favor complete todos los campos');
+                return;
+            }
+            
+            if (currentPlantillaId === null) {
+                // Crear nueva plantilla
+                const newPlantilla = {
+                    id: plantillasData.length > 0 ? Math.max(...plantillasData.map(p => p.id)) + 1 : 1,
+                    tipo,
+                    especialidad,
+                    nombre,
+                    contenido
+                };
+                plantillasData.push(newPlantilla);
+            } else {
+                // Actualizar plantilla existente
+                const index = plantillasData.findIndex(p => p.id === currentPlantillaId);
+                if (index !== -1) {
+                    plantillasData[index] = {
+                        ...plantillasData[index],
+                        tipo,
+                        especialidad,
+                        nombre,
+                        contenido
+                    };
+                }
+            }
+            
+            // Guardar en localStorage
+            localStorage.setItem('plantillasData', JSON.stringify(plantillasData));
+            
+            // Mostrar mensaje de confirmación
+            alert('Plantilla guardada correctamente');
+            
+            // Resetear variables
+            currentPlantillaId = null;
+            plantillaModified = false;
+            
+            // Recargar tabla y volver a la página de plantillas
+            showPage('plantillas');
+            loadPlantillasTable();
+        }
+        
+        // Función para cargar médicos en el select
+        function populateDoctorsSelect() {
+            const select = document.getElementById('requesting-doctor');
+            select.innerHTML = '<option value="">Seleccionar médico</option>';
+            
+            doctorsData.forEach(doctor => {
+                const prefix = doctor.sexo === 'Femenino' ? 'DRA.' : 'DR.';
+                const option = document.createElement('option');
+                option.value = `${doctor.apellidos}, ${doctor.nombres}`;
+                option.textContent = `${prefix} ${doctor.apellidos.toUpperCase()}, ${doctor.nombres.toUpperCase()}`;
+                select.appendChild(option);
+            });
+        }
+        
+        // Función para mostrar el informe con los datos de un paciente
+        function mostrarInforme(data, reportType) {
+            // Guardar tipo de informe actual
+            currentReportType = reportType;
+            currentCodAtencion = data.codAtencion;
+            
+            // Llenar los campos del informe con los datos del paciente
+            document.getElementById('informe-cod-atencion').textContent = data.codAtencion || '2KQ-402';
+            document.getElementById('informe-dni').value = data.dni || '4:26/03:14';
+            document.getElementById('informe-sexo').textContent = (data.sexo || 'FEMENINO').toUpperCase();
+            
+            // Separar apellidos y nombres
+            const apellidos = data.apellidos || 'VARGAS LOZANO';
+            const nombres = data.nombres || 'ROSA';
+            
+            document.getElementById('informe-apellidos').value = apellidos;
+            document.getElementById('informe-nombres').value = nombres;
+            
+            document.getElementById('informe-edad').value = data.edad || '40';
+            document.getElementById('informe-telefono').value = data.telefono || '-';
+            document.getElementById('informe-contacto').value = data.contactoFamiliar || '-';
+            document.getElementById('informe-tel-contacto').value = data.telefonoContacto || '-';
+            document.getElementById('informe-medico').value = data.medicoSolicitante || '-';
+            document.getElementById('informe-motivo').value = data.motivoEstudio || 'GRANULONA VULVAR';
+            document.getElementById('informe-clinica').value = data.clinica || '-';
+            
+            // Establecer fecha de registro
+            const today = new Date();
+            const registrationDate = today.toISOString().split('T')[0];
+            document.getElementById('fecha-registro').textContent = registrationDate;
+            
+            // Cargar datos guardados del informe
+            cargarInformeGuardado();
+            
+            // Mostrar la página de informe
+            showPage('ver-informe');
+        }
+        
+        // Función para cargar informe guardado
+        function cargarInformeGuardado() {
+            if (!currentReportType || !currentCodAtencion) return;
+            
+            // Obtener informe guardado
+            let savedReport = null;
+            if (currentReportType === 'surgical') {
+                savedReport = surgicalReports[currentCodAtencion];
+            } else if (currentReportType === 'cytological') {
+                savedReport = cytologicalReports[currentCodAtencion];
+            }
+            
+            if (savedReport) {
+                // Cargar datos editables del informe
+                document.getElementById('informe-dni').value = savedReport.dni || '';
+                document.getElementById('informe-apellidos').value = savedReport.apellidos || '';
+                document.getElementById('informe-nombres').value = savedReport.nombres || '';
+                document.getElementById('informe-edad').value = savedReport.edad || '';
+                document.getElementById('informe-telefono').value = savedReport.telefono || '';
+                document.getElementById('informe-contacto').value = savedReport.contactoFamiliar || '';
+                document.getElementById('informe-tel-contacto').value = savedReport.telefonoContacto || '';
+                document.getElementById('informe-medico').value = savedReport.medicoSolicitante || '';
+                document.getElementById('informe-motivo').value = savedReport.motivoEstudio || '';
+                document.getElementById('informe-clinica').value = savedReport.clinica || '';
+                
+                // Cargar descripciones
+                if (savedReport.macro) document.getElementById('macro-editor').innerHTML = savedReport.macro;
+                if (savedReport.micro) document.getElementById('micro-editor').innerHTML = savedReport.micro;
+                if (savedReport.diagnostico) document.getElementById('diagnostico-editor').innerHTML = savedReport.diagnostico;
+                
+                // Cargar fotos
+                if (savedReport.foto1) {
+                    document.getElementById('preview-1').src = savedReport.foto1;
+                    document.getElementById('preview-1').style.display = 'block';
+                    document.getElementById('controls-1').style.display = 'flex';
+                    document.querySelector('#photo-1 i').style.display = 'none';
+                    document.querySelector('#photo-1 .photo-text').style.display = 'none';
+                }
+                if (savedReport.foto2) {
+                    document.getElementById('preview-2').src = savedReport.foto2;
+                    document.getElementById('preview-2').style.display = 'block';
+                    document.getElementById('controls-2').style.display = 'flex';
+                    document.querySelector('#photo-2 i').style.display = 'none';
+                    document.querySelector('#photo-2 .photo-text').style.display = 'none';
+                }
+            }
+        }
+        
+        // Función para guardar informe actual
+        function guardarInforme() {
+            if (!currentReportType || !currentCodAtencion) return;
+            
+            // Crear objeto con datos del informe
+            const reportData = {
+                dni: document.getElementById('informe-dni').value,
+                apellidos: document.getElementById('informe-apellidos').value,
+                nombres: document.getElementById('informe-nombres').value,
+                edad: document.getElementById('informe-edad').value,
+                telefono: document.getElementById('informe-telefono').value,
+                contactoFamiliar: document.getElementById('informe-contacto').value,
+                telefonoContacto: document.getElementById('informe-tel-contacto').value,
+                medicoSolicitante: document.getElementById('informe-medico').value,
+                motivoEstudio: document.getElementById('informe-motivo').value,
+                clinica: document.getElementById('informe-clinica').value,
+                macro: document.getElementById('macro-editor').innerHTML,
+                micro: document.getElementById('micro-editor').innerHTML,
+                diagnostico: document.getElementById('diagnostico-editor').innerHTML,
+                foto1: document.getElementById('preview-1').src || '',
+                foto2: document.getElementById('preview-2').src || ''
+            };
+            
+            // Guardar en el almacén correspondiente
+            if (currentReportType === 'surgical') {
+                surgicalReports[currentCodAtencion] = reportData;
+                localStorage.setItem('surgicalReports', JSON.stringify(surgicalReports));
+            } else if (currentReportType === 'cytological') {
+                cytologicalReports[currentCodAtencion] = reportData;
+                localStorage.setItem('cytologicalReports', JSON.stringify(cytologicalReports));
+            }
+            
+            alert('Informe guardado correctamente');
+        }
+        
+        // Toggle del menú lateral
+        document.querySelector('.menu-toggle').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        });
+        
+        // Navegación entre páginas
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const link = this.getAttribute('data-link');
+                if (link) showPage(link);
+            });
+        });
+        
+        // Cambio de color al seleccionar archivo
+        const fileUpload = document.querySelector('#orden-servicio-upload');
+        if (fileUpload) {
+            fileUpload.addEventListener('click', function() {
+                // Crear input file oculto
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/jpeg';
+                fileInput.style.display = 'none';
+                
+                fileInput.addEventListener('change', function() {
+                    if (this.files.length > 0) {
+                        const fileName = this.files[0].name;
+                        fileUpload.innerHTML = `
+                            <i class="fas fa-file-image"></i>
+                            <div class="file-text">Archivo seleccionado</div>
+                            <div class="file-text">${fileName}</div>
+                        `;
+                        fileUpload.style.borderColor = '#4caf50';
+                        fileUpload.style.backgroundColor = '#e8f5e9';
+                    }
+                });
+                
+                document.body.appendChild(fileInput);
+                fileInput.click();
+                document.body.removeChild(fileInput);
+            });
+        }
+        
+        // Guardar datos en variables cuando se selecciona hematoxilina
+        document.getElementById('service-type')?.addEventListener('change', function() {
+            const serviceType = this.value;
+            
+            if (serviceType === 'hematoxilina' || serviceType === 'citologia') {
+                // Guardar el tipo de servicio
+                pacienteData.tipoServicio = serviceType;
+                
+                // Actualizar prefijo del código de atención
+                updateCodigoPrefijo();
+                
+                // Asignar event listeners para guardar datos en variables
+                document.getElementById('attention-code').addEventListener('input', function() {
+                    pacienteData.codAtencion = this.value;
+                });
+                
+                document.getElementById('dni').addEventListener('input', function() {
+                    validateDNI(this);
+                    pacienteData.dni = this.value;
+                });
+                
+                document.getElementById('age').addEventListener('input', function() {
+                    validateAge(this);
+                    pacienteData.edad = this.value;
+                });
+                
+                document.getElementById('first-name').addEventListener('input', function() {
+                    convertToUppercase(this);
+                    pacienteData.nombres = this.value;
+                });
+                
+                document.getElementById('last-name').addEventListener('input', function() {
+                    convertToUppercase(this);
+                    pacienteData.apellidos = this.value;
+                });
+                
+                document.getElementById('phone').addEventListener('input', function() {
+                    pacienteData.telefono = this.value;
+                });
+                
+                document.getElementById('gender').addEventListener('change', function() {
+                    pacienteData.sexo = this.value;
+                });
+                
+                document.getElementById('contact-date').addEventListener('input', function() {
+                    pacienteData.contactoFamiliar = this.value;
+                });
+                
+                document.getElementById('contact-phone').addEventListener('input', function() {
+                    pacienteData.telefonoContacto = this.value;
+                });
+                
+                document.getElementById('requesting-doctor').addEventListener('change', function() {
+                    pacienteData.medicoSolicitante = this.value;
+                });
+                
+                document.getElementById('study-reason').addEventListener('input', function() {
+                    pacienteData.motivoEstudio = this.value;
+                });
+                
+                document.getElementById('clinic').addEventListener('input', function() {
+                    pacienteData.clinica = this.value;
+                });
+            }
+        });
+        
+        // Validación del código de atención
+        document.getElementById('validate-btn')?.addEventListener('click', function() {
+            const serviceType = document.getElementById('service-type').value;
+            
+            if (serviceType !== 'hematoxilina' && serviceType !== 'citologia') {
+                alert('Seleccione un tipo de servicio primero');
+                return;
+            }
+            
+            const attentionCode = document.getElementById('attention-code').value;
+            
+            if (!attentionCode) {
+                alert('Por favor ingrese un código de atención');
+                return;
+            }
+            
+            // Verificar duplicado en ambos conjuntos de datos
+            const existingSurgical = surgicalData.some(item => item.codAtencion === attentionCode);
+            const existingCytological = cytologicalData.some(item => item.codAtencion === attentionCode);
+            
+            if (existingSurgical || existingCytological) {
+                document.getElementById('duplicate-message').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('duplicate-message').style.display = 'none';
+                }, 3000);
+            } else {
+                alert('Código válido, puede continuar');
+            }
+        });
+        
+        // Función para limpiar el formulario y variables
+        function limpiarFormulario() {
+            // Limpiar todos los campos
+            document.getElementById('service-type').value = '';
+            document.getElementById('attention-code').value = '';
+            document.getElementById('dni').value = '';
+            document.getElementById('age').value = '';
+            document.getElementById('first-name').value = '';
+            document.getElementById('last-name').value = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('gender').value = '';
+            document.getElementById('contact-date').value = '';
+            document.getElementById('contact-phone').value = '';
+            document.getElementById('requesting-doctor').value = '';
+            document.getElementById('study-reason').value = '';
+            document.getElementById('clinic').value = '';
+            
+            // Restaurar el file-upload
+            if (fileUpload) {
+                fileUpload.innerHTML = `
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <div class="file-text">Elegir archivos (JPG)</div>
+                    <div class="file-text">Ningún archivo seleccionado</div>
+                `;
+                fileUpload.style.borderColor = '#ccc';
+                fileUpload.style.backgroundColor = '#f9f9f9';
+            }
+            
+            // Limpiar variables de datos
+            pacienteData = {
+                codAtencion: '',
+                dni: '',
+                edad: '',
+                nombres: '',
+                apellidos: '',
+                telefono: '',
+                sexo: '',
+                contactoFamiliar: '',
+                telefonoContacto: '',
+                medicoSolicitante: '',
+                motivoEstudio: '',
+                clinica: '',
+                tipoServicio: ''
+            };
+        }
+        
+        // Guardar datos del paciente
+        document.getElementById('save-btn')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const serviceType = document.getElementById('service-type').value;
+            
+            // Validación simple de campos requeridos
+            const requiredFields = [
+                'service-type', 'dni', 'first-name', 'last-name'
+            ];
+            
+            let isValid = true;
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.style.borderColor = '#e53935';
+                } else {
+                    field.style.borderColor = '#ddd';
+                }
+            });
+            
+            if (!isValid) {
+                alert('Por favor complete los campos requeridos');
+                return;
+            }
+            
+            // Obtener datos del paciente
+            pacienteData = {
+                codAtencion: document.getElementById('attention-code').value,
+                dni: document.getElementById('dni').value,
+                edad: document.getElementById('age').value,
+                nombres: document.getElementById('first-name').value,
+                apellidos: document.getElementById('last-name').value,
+                telefono: document.getElementById('phone').value,
+                sexo: document.getElementById('gender').value,
+                contactoFamiliar: document.getElementById('contact-date').value,
+                telefonoContacto: document.getElementById('contact-phone').value,
+                medicoSolicitante: document.getElementById('requesting-doctor').value,
+                motivoEstudio: document.getElementById('study-reason').value,
+                clinica: document.getElementById('clinic').value,
+                tipoServicio: serviceType,
+                fechaRegistro: new Date().toISOString().split('T')[0] // Fecha actual
+            };
+            
+            // Verificar duplicado después de guardar
+            const existingSurgical = surgicalData.some(item => item.codAtencion === pacienteData.codAtencion);
+            const existingCytological = cytologicalData.some(item => item.codAtencion === pacienteData.codAtencion);
+            
+            if (existingSurgical || existingCytological) {
+                alert('Código duplicado, por favor ingrese otro código');
+                return;
+            }
+            
+            // Guardar según el tipo de servicio
+            if (serviceType === 'hematoxilina') {
+                // Agregar a la lista de datos quirúrgicos
+                surgicalData.push(pacienteData);
+                
+                // Guardar en localStorage
+                localStorage.setItem('surgicalData', JSON.stringify(surgicalData));
+                
+                // Mostrar mensaje de confirmación
+                const confirmation = document.getElementById('confirmation-message');
+                confirmation.innerHTML = `<i class="fas fa-check-circle"></i> Datos guardados correctamente en la tabla quirúrgica`;
+                confirmation.style.display = 'block';
+                
+                // Cargar los datos quirúrgicos actualizados
+                cargarDatosQuirurgicos();
+                
+                // Ir a la página de resultados quirúrgicos
+                showPage('resultados-quirurgicos');
+            } else if (serviceType === 'citologia') {
+                // Agregar a la lista de datos citológicos
+                cytologicalData.push(pacienteData);
+                
+                // Guardar en localStorage
+                localStorage.setItem('cytologicalData', JSON.stringify(cytologicalData));
+                
+                // Mostrar mensaje de confirmación
+                const confirmation = document.getElementById('confirmation-message');
+                confirmation.innerHTML = `<i class="fas fa-check-circle"></i> Datos guardados correctamente en la tabla citológica`;
+                confirmation.style.display = 'block';
+                
+                // Cargar los datos citológicos actualizados
+                cargarDatosCitologicos();
+                
+                // Ir a la página de resultados citológicos
+                showPage('resultados-citologicos');
+            }
+            
+            // Ocultar mensaje después de 3 segundos
+            setTimeout(() => {
+                confirmation.style.display = 'none';
+            }, 3000);
+            
+            // Limpiar formulario después de guardar
+            limpiarFormulario();
+        });
+        
+        // Función para cargar datos quirúrgicos desde localStorage
+        function cargarDatosQuirurgicos() {
+            const datos = JSON.parse(localStorage.getItem('surgicalData')) || [];
+            const tableBody = document.querySelector('#surgical-results-table tbody');
+            
+            // Limpiar tabla existente
+            tableBody.innerHTML = '';
+            
+            // Agregar filas con datos
+            datos.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.codAtencion || ''}</td>
+                    <td>${item.dni || ''}</td>
+                    <td>${item.edad || ''}</td>
+                    <td>${item.apellidos || ''}</td>
+                    <td>${item.nombres || ''}</td>
+                    <td>${item.sexo || 'No especificado'}</td>
+                    <td>${item.medicoSolicitante || ''}</td>
+                    <!-- CAMBIO 2: Eliminada la columna de motivo de estudio -->
+                    <td>${item.clinica || ''}</td>
+                    <td>${item.fechaRegistro || ''}</td>
+                    <td>${item.fechaInforme || ''}</td>
+                    <td>
+                        <button class="informe-btn" onclick="mostrarInforme(${JSON.stringify(item).replace(/"/g, '&quot;')}, 'surgical')">
+                            <i class="fas fa-file-medical"></i> Ver
+                        </button>
+                    </td>
+                    <td>
+                        <button class="delete-btn" title="Eliminar registro" onclick="eliminarRegistroQuirurgico(${index})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Función para cargar datos citológicos desde localStorage
+        function cargarDatosCitologicos() {
+            const datos = JSON.parse(localStorage.getItem('cytologicalData')) || [];
+            const tableBody = document.querySelector('#cytological-results-table tbody');
+            
+            // Limpiar tabla existente
+            tableBody.innerHTML = '';
+            
+            // Agregar filas con datos
+            datos.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.codAtencion || ''}</td>
+                    <td>${item.dni || ''}</td>
+                    <td>${item.edad || ''}</td>
+                    <td>${item.apellidos || ''}</td>
+                    <td>${item.nombres || ''}</td>
+                    <td>${item.sexo || 'No especificado'}</td>
+                    <td>${item.medicoSolicitante || ''}</td>
+                    <!-- CAMBIO 2: Eliminada la columna de motivo de estudio -->
+                    <td>${item.clinica || ''}</td>
+                    <td>${item.fechaRegistro || ''}</td>
+                    <td>${item.fechaInforme || ''}</td>
+                    <td>
+                        <button class="informe-btn" onclick="mostrarInforme(${JSON.stringify(item).replace(/"/g, '&quot;')}, 'cytological')">
+                            <i class="fas fa-file-medical"></i> Ver
+                        </button>
+                    </td>
+                    <td>
+                        <button class="delete-btn" title="Eliminar registro" onclick="eliminarRegistroCitologico(${index})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Función para eliminar un registro quirúrgico
+        function eliminarRegistroQuirurgico(index) {
+            if (confirm('¿Está seguro de eliminar este registro quirúrgico?')) {
+                const datos = JSON.parse(localStorage.getItem('surgicalData')) || [];
+                datos.splice(index, 1);
+                localStorage.setItem('surgicalData', JSON.stringify(datos));
+                cargarDatosQuirurgicos(); // Recargar la tabla
+            }
+        }
+        
+        // Función para eliminar un registro citológico
+        function eliminarRegistroCitologico(index) {
+            if (confirm('¿Está seguro de eliminar este registro citológico?')) {
+                const datos = JSON.parse(localStorage.getItem('cytologicalData')) || [];
+                datos.splice(index, 1);
+                localStorage.setItem('cytologicalData', JSON.stringify(datos));
+                cargarDatosCitologicos(); // Recargar la tabla
+            }
+        }
+        
+        // Botón para volver desde la página de informe
+        document.getElementById('volver-btn')?.addEventListener('click', function() {
+            // Regresar a la página anterior
+            const lastPage = localStorage.getItem('lastPage') || 'resultados-quirurgicos';
+            showPage(lastPage);
+        });
+        
+        // Función para firmar el informe
+        document.getElementById('firmar-btn')?.addEventListener('click', function() {
+            // Guardar antes de firmar
+            guardarInforme();
+            
+            alert('Informe firmado por el Dr. Castillo');
+            // Aquí se implementaría la lógica para firmar digitalmente el informe
+        });
+        
+        // Función para guardar el informe
+        document.getElementById('guardar-btn')?.addEventListener('click', guardarInforme);
+        
+        // Función para filtrar resultados quirúrgicos
+        function filtrarResultados() {
+            const cod = document.getElementById('search-cod').value.toLowerCase();
+            const dni = document.getElementById('search-dni').value.toLowerCase();
+            const paciente = document.getElementById('search-paciente').value.toLowerCase();
+            
+            const rows = document.querySelectorAll('#surgical-results-table tbody tr');
+            
+            rows.forEach(row => {
+                const rowCod = row.cells[1].textContent.toLowerCase();
+                const rowDni = row.cells[2].textContent.toLowerCase();
+                const rowPaciente = row.cells[4].textContent.toLowerCase() + ' ' + row.cells[5].textContent.toLowerCase();
+                
+                const match = 
+                    (cod === '' || rowCod.includes(cod)) &&
+                    (dni === '' || rowDni.includes(dni)) &&
+                    (paciente === '' || rowPaciente.includes(paciente));
+                
+                row.style.display = match ? '' : 'none';
+            });
+        }
+        
+        // Función para filtrar resultados citológicos
+        function filtrarResultadosCitologicos() {
+            const cod = document.getElementById('search-cod-cito').value.toLowerCase();
+            const dni = document.getElementById('search-dni-cito').value.toLowerCase();
+            const paciente = document.getElementById('search-paciente-cito').value.toLowerCase();
+            
+            const rows = document.querySelectorAll('#cytological-results-table tbody tr');
+            
+            rows.forEach(row => {
+                const rowCod = row.cells[1].textContent.toLowerCase();
+                const rowDni = row.cells[2].textContent.toLowerCase();
+                const rowPaciente = row.cells[4].textContent.toLowerCase() + ' ' + row.cells[5].textContent.toLowerCase();
+                
+                const match = 
+                    (cod === '' || rowCod.includes(cod)) &&
+                    (dni === '' || rowDni.includes(dni)) &&
+                    (paciente === '' || rowPaciente.includes(paciente));
+                
+                row.style.display = match ? '' : 'none';
+            });
+        }
+        
+        // Función para filtrar médicos
+        function filtrarMedicos() {
+            const nombre = document.getElementById('search-nombre-med').value.toLowerCase();
+            const apellido = document.getElementById('search-apellido-med').value.toLowerCase();
+            const especialidad = document.getElementById('search-especialidad-med').value.toLowerCase();
+            
+            const rows = document.querySelectorAll('#medicos-results-table tbody tr');
+            
+            rows.forEach(row => {
+                const rowNombre = row.cells[2].textContent.toLowerCase(); // Nombres
+                const rowApellido = row.cells[1].textContent.toLowerCase(); // Apellidos
+                const rowEspecialidad = row.cells[4].textContent.toLowerCase(); // Especialidad
+                
+                const match = 
+                    (nombre === '' || rowNombre.includes(nombre)) &&
+                    (apellido === '' || rowApellido.includes(apellido)) &&
+                    (especialidad === '' || rowEspecialidad.includes(especialidad));
+                
+                row.style.display = match ? '' : 'none';
+            });
+        }
+        
+        // Función para aplicar formato de texto
+        function formatDoc(command, value = null) {
+            document.execCommand(command, false, value);
+        }
+        
+        // Función para mostrar vista previa de foto
+        function previewPhoto(inputId, previewId, controlsId) {
+            const input = document.getElementById(inputId);
+            const preview = document.getElementById(previewId);
+            const controls = document.getElementById(controlsId);
+            const uploadArea = document.getElementById(`photo-${inputId.split('-')[2]}`);
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    // Mostrar vista previa
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    
+                    // Mostrar controles
+                    controls.style.display = 'flex';
+                    
+                    // Ocultar icono y texto
+                    uploadArea.querySelector('i').style.display = 'none';
+                    uploadArea.querySelector('.photo-text').style.display = 'none';
+                };
+                
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        // Función para eliminar foto
+        function removePhoto(photoId) {
+            const preview = document.getElementById(`preview-${photoId}`);
+            const controls = document.getElementById(`controls-${photoId}`);
+            const input = document.getElementById(`photo-input-${photoId}`);
+            const uploadArea = document.getElementById(`photo-${photoId}`);
+            
+            // Restaurar estado inicial
+            preview.style.display = 'none';
+            controls.style.display = 'none';
+            input.value = '';
+            
+            // Mostrar icono y texto
+            uploadArea.querySelector('i').style.display = 'block';
+            uploadArea.querySelector('.photo-text').style.display = 'block';
+        }
+        
+        // Función para editar médico
+        function editarMedico(index) {
+            const doctor = doctorsData[index];
+            
+            // Llenar los campos con los datos del médico
+            document.getElementById('search-apellido-med').value = doctor.apellidos;
+            document.getElementById('search-nombre-med').value = doctor.nombres;
+            document.getElementById('sexo-med').value = doctor.sexo;
+            document.getElementById('search-especialidad-med').value = doctor.especialidad;
+            document.getElementById('clinica-med').value = doctor.clinica;
+            
+            // Cambiar a modo edición
+            document.getElementById('register-btn-med').style.display = 'none';
+            document.getElementById('update-btn-med').style.display = 'inline-flex';
+            document.getElementById('cancel-btn-med').style.display = 'inline-flex';
+            
+            // Guardar el índice del médico que se está editando
+            currentDoctorIndex = index;
+        }
+        
+        // Función para actualizar médico
+        function actualizarMedico() {
+            if (currentDoctorIndex === null) return;
+            
+            const apellidos = document.getElementById('search-apellido-med').value;
+            const nombres = document.getElementById('search-nombre-med').value;
+            const sexo = document.getElementById('sexo-med').value;
+            const especialidad = document.getElementById('search-especialidad-med').value;
+            const clinica = document.getElementById('clinica-med').value;
+            
+            if (!apellidos || !nombres || !sexo || !especialidad || !clinica) {
+                alert('Por favor complete todos los campos');
+                return;
+            }
+            
+            // Actualizar los datos del médico
+            doctorsData[currentDoctorIndex] = {
+                ...doctorsData[currentDoctorIndex],
+                apellidos,
+                nombres,
+                sexo,
+                especialidad,
+                clinica
+            };
+            
+            // Guardar en localStorage
+            localStorage.setItem('doctorsData', JSON.stringify(doctorsData));
+            
+            // Recargar la tabla
+            loadDoctorsTable();
+            
+            // Restaurar modo normal
+            cancelarEdicion();
+            
+            alert('Médico actualizado correctamente');
+        }
+        
+        // Función para cancelar edición de médico
+        function cancelarEdicion() {
+            // Limpiar campos
+            document.getElementById('search-apellido-med').value = '';
+            document.getElementById('search-nombre-med').value = '';
+            document.getElementById('sexo-med').value = '';
+            document.getElementById('search-especialidad-med').value = '';
+            document.getElementById('clinica-med').value = '';
+            
+            // Restaurar botones
+            document.getElementById('register-btn-med').style.display = 'inline-flex';
+            document.getElementById('update-btn-med').style.display = 'none';
+            document.getElementById('cancel-btn-med').style.display = 'none';
+            
+            // Resetear índice
+            currentDoctorIndex = null;
+        }
+        
+        // Función para registrar un nuevo médico
+        function registrarNuevoMedico() {
+            const apellidos = document.getElementById('search-apellido-med').value;
+            const nombres = document.getElementById('search-nombre-med').value;
+            const sexo = document.getElementById('sexo-med').value;
+            const especialidad = document.getElementById('search-especialidad-med').value;
+            const clinica = document.getElementById('clinica-med').value;
+            
+            if (!apellidos || !nombres || !sexo || !especialidad || !clinica) {
+                alert('Por favor complete todos los campos');
+                return;
+            }
+            
+            // Crear nuevo médico
+            const newDoctor = {
+                id: doctorsData.length > 0 ? Math.max(...doctorsData.map(d => d.id)) + 1 : 1,
+                apellidos,
+                nombres,
+                sexo,
+                especialidad,
+                clinica
+            };
+            
+            // Agregar al array
+            doctorsData.push(newDoctor);
+            
+            // Guardar en localStorage
+            localStorage.setItem('doctorsData', JSON.stringify(doctorsData));
+            
+            // Recargar tabla
+            loadDoctorsTable();
+            
+            // Limpiar formulario
+            document.getElementById('search-apellido-med').value = '';
+            document.getElementById('search-nombre-med').value = '';
+            document.getElementById('sexo-med').value = '';
+            document.getElementById('search-especialidad-med').value = '';
+            document.getElementById('clinica-med').value = '';
+            
+            alert('Médico registrado correctamente');
+        }
+        
+        // Función para cargar médicos en tabla
+        function loadDoctorsTable() {
+            const tableBody = document.querySelector('#medicos-results-table tbody');
+            tableBody.innerHTML = '';
+            
+            doctorsData.forEach((doctor, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${doctor.apellidos}</td>
+                    <td>${doctor.nombres}</td>
+                    <td>${doctor.sexo}</td>
+                    <td>${doctor.especialidad}</td>
+                    <td>${doctor.clinica}</td>
+                    <td>
+                        <button class="modify-btn" title="Modificar médico" onclick="editarMedico(${index})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                    <td>
+                        <button class="delete-btn" title="Eliminar médico" onclick="deleteDoctor(${index})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Función para eliminar médico
+        function deleteDoctor(index) {
+            if (confirm('¿Está seguro de eliminar este médico?')) {
+                doctorsData.splice(index, 1);
+                localStorage.setItem('doctorsData', JSON.stringify(doctorsData));
+                loadDoctorsTable();
+            }
+        }
+        
+        // Función para cambiar entre páginas
+        function showPage(pageId) {
+            // Guardar la última página visitada (excepto la de informe)
+            if (pageId !== 'ver-informe' && pageId !== 'agregar-plantilla' && pageId !== 'informe-preliminar') {
+                localStorage.setItem('lastPage', pageId);
+            }
+            
+            // Ocultar todas las páginas
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Mostrar la página solicitada
+            document.getElementById(pageId).classList.add('active');
+            
+            // Actualizar el título de la página
+            if (pageId === 'registro-pacientes') {
+                document.getElementById('page-title').textContent = 'Registro de Pacientes';
+                // Cargar médicos en el select
+                populateDoctorsSelect();
+                
+                // Actualizar fechas
+                document.getElementById('registration-date').textContent = getCurrentDatePeru();
+                document.getElementById('delivery-date').textContent = getDeliveryDate();
+            } else if (pageId === 'registro-medicos') {
+                document.getElementById('page-title').textContent = 'Registro de Médicos';
+                loadDoctorsTable();
+            } else if (pageId === 'resultados-quirurgicos') {
+                document.getElementById('page-title').textContent = 'Resultados Quirúrgicos';
+                cargarDatosQuirurgicos();
+            } else if (pageId === 'resultados-citologicos') {
+                document.getElementById('page-title').textContent = 'Resultados Citológicos';
+                cargarDatosCitologicos();
+            } else if (pageId === 'plantillas') {
+                document.getElementById('page-title').textContent = 'Plantillas';
+                loadPlantillasTable();
+            } else if (pageId === 'ver-informe') {
+                document.getElementById('page-title').textContent = 'Informe Patológico';
+            } else if (pageId === 'agregar-plantilla') {
+                document.getElementById('page-title').textContent = 'Registro Plantilla';
+                // Si no estamos editando, limpiar el formulario
+                if (currentPlantillaId === null) {
+                    document.getElementById('tipo-plantilla').value = '';
+                    document.getElementById('especialidad-plantilla').value = '';
+                    document.getElementById('nombre-plantilla').value = '';
+                    document.getElementById('contenido-plantilla').innerHTML = '';
+                    plantillaModified = false;
+                }
+            } else if (pageId === 'informe-preliminar') {
+                document.getElementById('page-title').textContent = 'Informe Preliminar';
+            }
+            
+            // Actualizar el menú activo
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            if (pageId !== 'ver-informe' && pageId !== 'agregar-plantilla' && pageId !== 'informe-preliminar') {
+                document.querySelector(`.menu-item[data-link="${pageId}"]`).classList.add('active');
+            }
+        }
+        
+        // Función para generar informe preliminar (MODIFICADA)
+        function generarInformePreliminar() {
+            const informeContainer = document.getElementById('preliminary-report-content');
+            
+            // Obtener datos del paciente
+            const codAtencion = document.getElementById('informe-cod-atencion').textContent;
+            const dni = document.getElementById('informe-dni').value;
+            const sexo = document.getElementById('informe-sexo').textContent;
+            const apellidos = document.getElementById('informe-apellidos').value.toUpperCase();
+            const nombres = document.getElementById('informe-nombres').value.toUpperCase();
+            const edad = document.getElementById('informe-edad').value;
+            const telefono = document.getElementById('informe-telefono').value;
+            const contactoFamiliar = document.getElementById('informe-contacto').value;
+            const telefonoContacto = document.getElementById('informe-tel-contacto').value;
+            const medicoSolicitante = document.getElementById('informe-medico').value.toUpperCase();
+            const motivoEstudio = document.getElementById('informe-motivo').value;
+            const clinica = document.getElementById('informe-clinica').value;
+            
+            // Obtener descripciones
+            const macro = document.getElementById('macro-editor').innerHTML;
+            const micro = document.getElementById('micro-editor').innerHTML;
+            const diagnostico = document.getElementById('diagnostico-editor').innerHTML;
+            
+            // Fechas
+            const fechaRecepcion = document.getElementById('fecha-registro').textContent;
+            const fechaInforme = document.getElementById('fecha-entrega').textContent;
+            
+            // Generar contenido del informe preliminar
+            informeContainer.innerHTML = `
+                <div class="report-header">
+                    <img src="encabezado.png" alt="JC PATH LAB - Encabezado">
+                </div>
+                
+                <div class="patient-info">
+                    <h3>DATOS DEL PACIENTE</h3>
+                    <!-- NUEVA TABLA PARA ORGANIZAR DATOS -->
+                    <table class="patient-data-table">
+                        <tr>
+                            <td class="info-cell" width="70%">
+                                <strong>APELLIDOS Y NOMBRES:</strong> ${apellidos} ${nombres}
+                            </td>
+                            <td rowspan="2" class="codigo-cell" width="30%">
+                                ${codAtencion}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="info-cell">
+                                <strong>SEXO:</strong> ${sexo}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="info-cell">
+                                <strong>FECHA RECEPCIÓN:</strong> ${fechaRecepcion}
+                            </td>
+                            <td class="info-cell">
+                                <strong>FECHA INFORME:</strong> ${fechaInforme}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="info-cell">
+                                <strong>MÉDICO:</strong> ${medicoSolicitante}
+                            </td>
+                            <td class="info-cell">
+                                <strong>CLÍNICA:</strong> ${clinica}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="report-section">
+                    <h3>DESCRIPCIÓN MACROSCÓPICA</h3>
+                    <img src="linea1.png" alt="Línea decorativa" class="decorative-line">
+                    <div class="report-content">${macro}</div>
+                </div>
+                
+                <div class="report-section">
+                    <h3>DESCRIPCIÓN MICROSCÓPICA</h3>
+                    <img src="linea2.png" alt="Línea decorativa" class="decorative-line">
+                    <div class="report-content">${micro}</div>
+                </div>
+                
+                <div class="diagnosis-section">
+                    <div class="diagnosis-title">DIAGNÓSTICO HISTOLÓGICO:</div>
+                    <div class="report-content">${diagnostico}</div>
+                </div>
+                
+                <div class="signature-section">
+                    <div class="signature-info">
+                        <img src="firma.png" alt="Firma del Dr. Joseph Castillo" class="signature-image">
+                    </div>
+                </div>
+
+                <div class="page-footer">
+                    <img src="piedepagina.png" alt="Pie de página" class="footer-image">
+                </div>
+
+                <!-- NUEVO PIE DE PÁGINA CON DATOS -->
+                <div class="report-footer">
+                    <div class="footer-left">
+                        ${codAtencion} ${apellidos} ${nombres}
+                    </div>
+                    <div class="footer-right">
+                        <span>página 1 de 1</span>
+                    </div>
+                </div>
+            `;
+            
+            // Mostrar la página del informe preliminar
+            showPage('informe-preliminar');
+        }
+        
+        // Inicializar página
+        window.addEventListener('load', function() {
+            // Guardar datos iniciales de médicos
+            if (!localStorage.getItem('doctorsData')) {
+                localStorage.setItem('doctorsData', JSON.stringify(doctorsData));
+            } else {
+                doctorsData = JSON.parse(localStorage.getItem('doctorsData'));
+            }
+            
+            // Cargar datos quirúrgicos existentes
+            surgicalData = JSON.parse(localStorage.getItem('surgicalData')) || [];
+            
+            // Cargar datos citológicos existentes
+            cytologicalData = JSON.parse(localStorage.getItem('cytologicalData')) || [];
+            
+            // Cargar informes guardados
+            surgicalReports = JSON.parse(localStorage.getItem('surgicalReports')) || {};
+            cytologicalReports = JSON.parse(localStorage.getItem('cytologicalReports')) || {};
+            
+            // Cargar plantillas guardadas
+            plantillasData = JSON.parse(localStorage.getItem('plantillasData')) || [];
+            
+            // Configurar búsqueda para resultados quirúrgicos
+            document.getElementById('search-btn')?.addEventListener('click', filtrarResultados);
+            
+            // Configurar búsqueda para resultados citológicos
+            document.getElementById('search-btn-cito')?.addEventListener('click', filtrarResultadosCitologicos);
+            
+            // Configurar búsqueda para médicos
+            document.getElementById('search-btn-med')?.addEventListener('click', filtrarMedicos);
+            
+            // Configurar búsqueda para plantillas
+            document.getElementById('search-btn-plant')?.addEventListener('click', function() {
+                const searchTerm = document.getElementById('search-nombre-plantilla').value.toLowerCase();
+                const rows = document.querySelectorAll('#plantillas-results-table tbody tr');
+                
+                rows.forEach(row => {
+                    const nombrePlantilla = row.cells[3].textContent.toLowerCase();
+                    const match = nombrePlantilla.includes(searchTerm);
+                    row.style.display = match ? '' : 'none';
+                });
+            });
+            
+            // Configurar botón para agregar plantilla
+            document.getElementById('add-template-btn')?.addEventListener('click', function() {
+                currentPlantillaId = null;
+                showPage('agregar-plantilla');
+            });
+            
+            // Botón para salir de agregar plantilla
+            document.getElementById('salir-plantilla-btn')?.addEventListener('click', function() {
+                mostrarConfirmacionSalir();
+            });
+            
+            // Botón para guardar plantilla
+            document.getElementById('guardar-plantilla-btn')?.addEventListener('click', function() {
+                guardarPlantilla();
+            });
+            
+            // Botón para confirmar salir sin guardar (Sí)
+            document.getElementById('confirm-exit-yes')?.addEventListener('click', function() {
+                document.getElementById('confirm-exit-dialog').style.display = 'none';
+                showPage('plantillas');
+                plantillaModified = false;
+            });
+            
+            // Botón para cancelar salir sin guardar (No)
+            document.getElementById('confirm-exit-no')?.addEventListener('click', function() {
+                document.getElementById('confirm-exit-dialog').style.display = 'none';
+            });
+            
+            // Detectar cambios en el formulario de plantillas
+            document.getElementById('tipo-plantilla')?.addEventListener('change', function() {
+                plantillaModified = true;
+            });
+            
+            document.getElementById('especialidad-plantilla')?.addEventListener('change', function() {
+                plantillaModified = true;
+            });
+            
+            document.getElementById('nombre-plantilla')?.addEventListener('input', function() {
+                plantillaModified = true;
+            });
+            
+            document.getElementById('contenido-plantilla')?.addEventListener('input', function() {
+                plantillaModified = true;
+            });
+            
+            // Configurar paginación quirúrgicos
+            document.querySelectorAll('#pagination .page-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#pagination .page-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // Configurar paginación médicos
+            document.querySelectorAll('#pagination-med .page-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#pagination-med .page-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // Configurar paginación citológicos
+            document.querySelectorAll('#pagination-cito .page-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#pagination-cito .page-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // Configurar paginación plantillas
+            document.querySelectorAll('#pagination-plant .page-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#pagination-plant .page-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // Configurar botones de formato
+            document.querySelectorAll('.format-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const command = this.getAttribute('data-command');
+                    formatDoc(command);
+                });
+            });
+            
+            // Configurar eventos para subir fotos
+            [1, 2].forEach(photoId => {
+                const input = document.getElementById(`photo-input-${photoId}`);
+                const uploadArea = document.getElementById(`photo-${photoId}`);
+                
+                // Al hacer clic en el área de subida
+                uploadArea.addEventListener('click', function() {
+                    input.click();
+                });
+                
+                // Al cambiar el archivo seleccionado
+                input.addEventListener('change', function() {
+                    previewPhoto(`photo-input-${photoId}`, `preview-${photoId}`, `controls-${photoId}`);
+                });
+                
+                // Soporte para arrastrar y soltar
+                uploadArea.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.style.borderColor = '#1e88e5';
+                    this.style.backgroundColor = '#f0f7ff';
+                });
+                
+                uploadArea.addEventListener('dragleave', function() {
+                    this.style.borderColor = '#ccc';
+                    this.style.backgroundColor = '#f9f9f9';
+                });
+                
+                uploadArea.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.style.borderColor = '#ccc';
+                    this.style.backgroundColor = '#f9f9f9';
+                    
+                    if (e.dataTransfer.files.length) {
+                        input.files = e.dataTransfer.files;
+                        previewPhoto(`photo-input-${photoId}`, `preview-${photoId}`, `controls-${photoId}`);
+                    }
+                });
+            });
+            
+            // Configurar botón para registrar médico
+            document.getElementById('register-btn-med').addEventListener('click', registrarNuevoMedico);
+            
+            // Configurar botón para actualizar médico
+            document.getElementById('update-btn-med').addEventListener('click', actualizarMedico);
+            
+            // Configurar botón para cancelar edición de médico
+            document.getElementById('cancel-btn-med').addEventListener('click', cancelarEdicion);
+            
+            // Configurar botón para generar informe preliminar
+            document.getElementById('preliminary-btn').addEventListener('click', generarInformePreliminar);
+            
+            // Configurar botón para volver al informe desde el informe preliminar
+            document.getElementById('back-to-report-btn').addEventListener('click', function() {
+                showPage('ver-informe');
+            });
+            
+            // Mostrar la página correcta
+            showPage('registro-pacientes');
+        });
+    </script>
+</body>
+</html>

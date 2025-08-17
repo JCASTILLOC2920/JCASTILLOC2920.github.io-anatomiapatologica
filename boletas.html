@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<!-- saved from url=(0063)file:///C:/Users/josehp/Desktop/boleta%20de%20ventas/index.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JC PATH LAB - Generador de Boletas</title>
+    <link rel="stylesheet" href="./JC PATH LAB - Generador de Boletas_files/all.min.css">
+    <style>
+        /* Estilos existentes (no modificados) */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #1a3a5f;
+            --secondary: #2c5d8c;
+            --accent: #3a86b8;
+            --light: #f8f9fa;
+            --dark: #0d1b2a;
+            --text: #333333;
+            --border: #e0e0e0;
+            --success: #4caf50;
+            --hover: #2a7cc7;
+            --light-blue: #3a86b8;
+            --pending: #e74c3c;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: var(--text);
+        }
+
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 0 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 1000;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            height: 80px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, var(--accent), #4a9bd9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo i {
+            font-size: 28px;
+            color: white;
+        }
+
+        .title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .title span {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 400;
+            opacity: 0.9;
+        }
+
+        /* Navigation Styles */
+        nav {
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-menu li {
+            margin-left: 1.8rem;
+            position: relative;
+        }
+
+        .nav-menu li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1rem;
+            padding: 0.5rem 0.3rem;
+            display: block;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-menu li a:hover {
+            color: #cce6ff;
+        }
+
+        .nav-menu li a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: white;
+            transition: width 0.3s ease;
+        }
+
+        .nav-menu li a:hover::after,
+        .nav-menu li a.active::after {
+            width: 100%;
+        }
+
+        /* Hamburger Menu */
+        .hamburger {
+            display: none;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            width: 40px;
+            height: 40px;
+            position: relative;
+            z-index: 1001;
+        }
+
+        .hamburger span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background: white;
+            margin: 5px auto;
+            transition: all 0.3s ease;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 860px) {
+            .header-container {
+                height: 70px;
+            }
+            
+            .nav-menu {
+                position: fixed;
+                top: 0;
+                left: -100%;
+                width: 280px;
+                height: 100vh;
+                background: linear-gradient(135deg, var(--primary), var(--dark));
+                flex-direction: column;
+                padding: 100px 0 30px 0;
+                transition: all 0.5s ease;
+                z-index: 1000;
+                box-shadow: 5px 0 15px rgba(0, 0, 0, 0.15);
+            }
+            
+            .nav-menu.active {
+                left: 0;
+            }
+            
+            .nav-menu li {
+                margin: 1.5rem 2rem;
+            }
+            
+            .nav-menu li a {
+                font-size: 1.1rem;
+                padding: 0.5rem 0;
+            }
+            
+            .hamburger {
+                display: block;
+            }
+            
+            .hamburger.active span:nth-child(1) {
+                transform: translateY(8px) rotate(45deg);
+            }
+            
+            .hamburger.active span:nth-child(2) {
+                opacity: 0;
+            }
+            
+            .hamburger.active span:nth-child(3) {
+                transform: translateY(-8px) rotate(-45deg);
+            }
+            
+            .logo {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .title {
+                font-size: 1rem;
+            }
+            
+            .title span {
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-container {
+                padding: 0 1rem;
+            }
+            
+            .title {
+                font-size: 0.9rem;
+            }
+            
+            .title span {
+                font-size: 0.7rem;
+            }
+        }
+
+        /* Demo Content */
+        .content {
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+            text-align: center;
+        }
+        
+        .content h1 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            font-size: 2.5rem;
+        }
+        
+        .content p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #555;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+        }
+        
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            width: 280px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-card i {
+            font-size: 2.5rem;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+        }
+        
+        .feature-card h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        /* Nueva funcionalidad: Secciones */
+        .page-section {
+            display: none;
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+        }
+        
+        .page-section.active {
+            display: block;
+        }
+        
+        .section-title {
+            color: var(--primary);
+            margin-bottom: 2rem;
+            font-size: 2.2rem;
+            text-align: center;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
+            display: inline-block;
+        }
+        
+        .form-container {
+            background: white;
+            border-radius: 10px;
+            padding: 2.5rem;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .form-group {
+            margin-bottom: 1.8rem;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(58, 134, 184, 0.2);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.8rem;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, var(--accent), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.9rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        
+        th {
+            background-color: var(--primary);
+            color: white;
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        
+        tr:hover {
+            background-color: #f0f7ff;
+        }
+        
+        /* Contenedor A4 para impresión */
+        .a4-container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+            position: relative;
+            padding: 15mm;
+            box-sizing: border-box;
+        }
+
+        /* Estilos específicos para la plantilla de boleta */
+        .template-preview {
+            background: white;
+            border-radius: 0;
+            padding: 0;
+            border: 1px solid var(--border);
+            min-height: 267mm;
+            position: relative;
+        }
+        
+        .template-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 10mm 15mm;
+            text-align: center;
+            margin: -15mm -15mm 5mm -15mm;
+        }
+        
+        .template-body {
+            padding: 5mm 0;
+        }
+        
+        .template-row {
+            display: flex;
+            border-bottom: 1px dashed var(--border);
+            padding: 5px 0;
+            margin-bottom: 3mm;
+        }
+        
+        .template-label {
+            flex: 0 0 40%;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .template-value {
+            flex: 1;
+        }
+        
+        /* Estilo para el nuevo título de boleta (color cambiado a azul) */
+        .boleta-title {
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-decoration: underline;
+            margin: 10mm 0 5mm 0;
+            color: var(--light-blue);
+            text-align: center;
+        }
+        
+        /* Nuevo estilo para la fecha y ubicación */
+        .location-date {
+            position: absolute;
+            bottom: 15mm;
+            right: 15mm;
+            font-size: 14px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        /* Estilos para los campos de costo */
+        .costo-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        
+        .costo-item {
+            margin-bottom: 10px;
+        }
+        
+        .total-container {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: right;
+            border-left: 4px solid var(--accent);
+        }
+        
+        /* Estilos para impresión */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            .a4-container,
+            .a4-container * {
+                visibility: visible;
+            }
+            
+            .a4-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 210mm;
+                height: 297mm;
+                margin: 0;
+                padding: 15mm;
+                box-shadow: none;
+                page-break-after: always;
+            }
+            
+            .template-header {
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+        }
+        
+        /* Nuevos estilos para el registro de boletas */
+        .boleta-pending {
+            border-bottom: 2px solid var(--pending) !important;
+        }
+        
+        .cancelado-cell {
+            text-align: center;
+        }
+        
+        .delete-boleta {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: 5px;
+        }
+        
+        .delete-boleta:hover {
+            background-color: #c0392b;
+        }
+        
+        .print-boleta {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .print-boleta:hover {
+            background-color: var(--secondary);
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body style="overflow: auto;">
+    <header>
+        <div class="header-container">
+            <div class="logo-section" id="logoSection">
+                <div class="logo">
+                    <i class="fas fa-microscope"></i>
+                </div>
+                <div class="title">
+                    JC PATH LAB
+                    <span>Generador de Boletas de Laboratorio de Anatomía Patológica</span>
+                </div>
+            </div>
+            
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="file:///C:/Users/josehp/Desktop/boleta%20de%20ventas/index.html#" class="nav-link active" data-section="registro">Registro de cliente</a></li>
+                    <li><a href="file:///C:/Users/josehp/Desktop/boleta%20de%20ventas/index.html#" class="nav-link" data-section="listado">Listado de clientes</a></li>
+                    <li><a href="file:///C:/Users/josehp/Desktop/boleta%20de%20ventas/index.html#" class="nav-link" data-section="plantilla">Plantilla de boleta</a></li>
+                    <!-- Nuevo elemento de menú para Registro de Boletas -->
+                    <li><a href="file:///C:/Users/josehp/Desktop/boleta%20de%20ventas/index.html#" class="nav-link" data-section="registro-boletas">Registro de boletas</a></li>
+                </ul>
+                <button class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Sección de Inicio (existente) -->
+    <section class="content" id="inicio" style="display: none;">
+        <h1>Sistema de Gestión de Laboratorio de Anatomía Patológica</h1>
+        <p>JC PATH LAB ofrece soluciones avanzadas para la generación de boletas de laboratorio, gestión de clientes y seguimiento de muestras patológicas con los más altos estándares de calidad.</p>
+        
+        <div class="features">
+            <div class="feature-card">
+                <i class="fas fa-user-plus"></i>
+                <h3>Registro de Clientes</h3>
+                <p>Gestión completa de información de clientes y pacientes con historial de muestras.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-list-alt"></i>
+                <h3>Listado de Clientes</h3>
+                <p>Acceso rápido a todos los clientes registrados con opciones de búsqueda avanzada.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-file-medical"></i>
+                <h3>Plantillas de Boletas</h3>
+                <p>Generación profesional de boletas con diseños personalizables y datos precisos.</p>
+            </div>
+            <!-- Nueva tarjeta de características -->
+            <div class="feature-card">
+                <i class="fas fa-receipt"></i>
+                <h3>Registro de Boletas</h3>
+                <p>Gestión permanente de boletas generadas con seguimiento de pagos y estado.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección de Registro de Cliente - Modificada -->
+    <section class="page-section" id="registro" style="display: block;">
+        <div class="form-container">
+            <h2 class="section-title">Registro de Cliente</h2>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="razon-social">Razón Social</label>
+                    <input type="text" id="razon-social" placeholder="Ingrese razón social">
+                </div>
+                
+                <div class="form-group">
+                    <label for="ruc">RUC</label>
+                    <input type="text" id="ruc" placeholder="Número de RUC">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="direccion">Dirección</label>
+                    <input type="text" id="direccion" placeholder="Dirección completa">
+                </div>
+                
+                <div class="form-group">
+                    <label for="telefono">Teléfono</label>
+                    <input type="text" id="telefono" placeholder="Número de teléfono">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="Correo electrónico">
+            </div>
+            
+            <button class="btn btn-block" id="registrar-cliente">Registrar Cliente</button>
+        </div>
+    </section>
+
+    <!-- Sección de Listado de Clientes - Modificada -->
+    <section class="page-section" id="listado" style="display: none;">
+        <div class="table-container">
+            <h2 class="section-title">Listado de Clientes</h2>
+            
+            <table id="clientes-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Razón Social</th>
+                        <th>RUC</th>
+                        <th>Dirección</th>
+                        <th>Teléfono</th>
+                        <th>Email</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="clientes-body"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Sección de Plantilla de Boleta - Modificada -->
+    <section class="page-section" id="plantilla" style="display: none;">
+        <div class="a4-container">
+            <div class="template-preview">
+                <div class="template-header">
+                    <h2>JC PATH LAB</h2>
+                    <p>Laboratorio de Anatomía Patológica</p>
+                </div>
+                <div class="boleta-title">BOLETA DE VENTA</div>
+                
+                <div class="template-body">
+                    <!-- Datos del emisor (permanentes) -->
+                    <div class="template-row">
+                        <div class="template-label">EMISOR:</div>
+                        <div class="template-value"></div>
+                    </div>
+                    
+                    <div class="template-row">
+                        <div class="template-label">NOMBRE:</div>
+                        <div class="template-value">Josehp Cristopher Castillo Cuenca</div>
+                    </div>
+                    
+                    <div class="template-row">
+                        <div class="template-label">DOCUMENTO:</div>
+                        <div class="template-value">DNI 41457466</div>
+                    </div>
+                    
+                    <div class="template-row">
+                        <div class="template-label">DIRECCIÓN:</div>
+                        <div class="template-value">MZ M2 LOTE 13 URB. JARDINES DE CHILLON</div>
+                    </div>
+                    
+                    <div class="template-row">
+                        <div class="template-label">RUC Emisor:</div>
+                        <div class="template-value">10414573667</div>
+                    </div>
+                    
+                    <!-- Separador visual -->
+                    <div class="template-row" style="border-bottom: 2px solid var(--border); margin: 10mm 0;"></div>
+                    
+                    <!-- Nuevo título CLIENTE -->
+                    <div class="template-row">
+                        <div class="template-label" style="font-size: 1.2em; color: var(--primary);">CLIENTE:</div>
+                        <div class="template-value"></div>
+                    </div>
+                    
+                    <!-- Campos del cliente -->
+                    <div class="template-row">
+                        <div class="template-label">Razón Social:</div>
+                        <div class="template-value">
+                            <select id="cliente-select" class="costo-input"><option value="">Seleccione un cliente</option></select>
+                        </div>
+                    </div>
+                    
+                    <div class="template-row">
+                        <div class="template-label">RUC:</div>
+                        <div class="template-value" id="ruc-cliente"></div>
+                    </div>
+                    
+                    <div class="template-row">
+                        <div class="template-label">Dirección:</div>
+                        <div class="template-value" id="direccion-cliente"></div>
+                    </div>
+                    
+                    <div class="template-row">
+                        <div class="template-label">Número de muestras:</div>
+                        <div class="template-value">
+                            <input type="number" id="num-muestras" min="1" value="1" class="costo-input">
+                        </div>
+                    </div>
+                    
+                    <div id="costos-container"><div class="template-row costo-item">
+                        <div class="template-label">Muestra 1 Costo:</div>
+                        <div class="template-value">
+                            <input type="number" class="costo-input costo-muestra" min="0" step="0.01" placeholder="S/ 0.00" data-index="1">
+                        </div>
+                    </div></div>
+                    
+                    <div class="total-container">
+                        <div class="template-label">Pago total:</div>
+                        <div class="template-value" id="pago-total">S/ 0.00</div>
+                    </div>
+                </div>
+                
+                <!-- Ubicación y fecha movidas a la derecha -->
+                <div class="location-date">Puente Piedra, <span id="current-date">17 de agosto de 2025</span></div>
+            </div>
+        </div>
+        
+        <!-- Botón de impresión -->
+        <div class="no-print" style="text-align: center; margin-top: 20px;">
+            <!-- Nuevo botón para guardar boleta -->
+            <button class="btn" id="guardar-boleta" style="margin-right: 10px;">
+                <i class="fas fa-save"></i> Guardar Boleta
+            </button>
+            <button class="btn" onclick="window.print()">
+                <i class="fas fa-print"></i> Imprimir Boleta
+            </button>
+        </div>
+    </section>
+    
+    <!-- Nueva sección para Registro de Boletas -->
+    <section class="page-section" id="registro-boletas" style="display: none;">
+        <div class="table-container">
+            <h2 class="section-title">Registro de Boletas</h2>
+            <p class="section-description" style="text-align: center; margin-bottom: 20px; color: #555;">
+                Este registro permanece permanente y solo puede ser eliminado por el administrador
+            </p>
+            
+            <table id="boletas-table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Razón Social</th>
+                        <th>RUC</th>
+                        <th>Dirección</th>
+                        <th>N° Muestras</th>
+                        <th>Monto</th>
+                        <th>Cancelado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="boletas-body"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <script>
+        // Almacenamiento de clientes
+        let clientes = JSON.parse(localStorage.getItem('clientes')) || [];
+        let clienteCounter = localStorage.getItem('clienteCounter') || 1;
+        
+        // Almacenamiento de boletas
+        let boletas = JSON.parse(localStorage.getItem('boletas')) || [];
+        let boletaCounter = localStorage.getItem('boletaCounter') || 1;
+        
+        // Mobile menu toggle functionality
+        const hamburger = document.querySelector('.hamburger');
+        const navMenu = document.querySelector('.nav-menu');
+        
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            navMenu.classList.toggle('active');
+            
+            // Toggle body scroll when menu is open
+            if (navMenu.classList.contains('active')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = 'auto';
+            }
+        });
+        
+        // Nueva funcionalidad: Navegación entre secciones
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos de navegación
+            const navLinks = document.querySelectorAll('.nav-link');
+            const logoSection = document.getElementById('logoSection');
+            
+            // Secciones
+            const inicioSection = document.getElementById('inicio');
+            const registroSection = document.getElementById('registro');
+            const listadoSection = document.getElementById('listado');
+            const plantillaSection = document.getElementById('plantilla');
+            const registroBoletasSection = document.getElementById('registro-boletas');
+            
+            // Función para mostrar una sección específica
+            function showSection(sectionId) {
+                // Ocultar todas las secciones
+                inicioSection.style.display = 'none';
+                registroSection.style.display = 'none';
+                listadoSection.style.display = 'none';
+                plantillaSection.style.display = 'none';
+                registroBoletasSection.style.display = 'none';
+                
+                // Mostrar la sección solicitada
+                document.getElementById(sectionId).style.display = 'block';
+                
+                // Actualizar clase activa en navegación
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.dataset.section === sectionId) {
+                        link.classList.add('active');
+                    }
+                });
+                
+                // Cerrar menú móvil si está abierto
+                hamburger.classList.remove('active');
+                navMenu.classList.remove('active');
+                document.body.style.overflow = 'auto';
+                
+                // Si es la sección de plantilla, poblar clientes
+                if (sectionId === 'plantilla') {
+                    populateClientSelect();
+                }
+                
+                // Si es la sección de listado, actualizar tabla
+                if (sectionId === 'listado') {
+                    renderClientesTable();
+                }
+                
+                // Si es la sección de registro de boletas, actualizar tabla
+                if (sectionId === 'registro-boletas') {
+                    renderBoletasTable();
+                }
+            }
+            
+            // Event listeners para los enlaces de navegación
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showSection(this.dataset.section);
+                });
+            });
+            
+            // Event listener para el logo (volver a inicio)
+            logoSection.addEventListener('click', function() {
+                showSection('inicio');
+            });
+            
+            // Funcionalidad para eliminar filas de clientes
+            document.getElementById('clientes-body').addEventListener('click', function(e) {
+                if (e.target.classList.contains('eliminar-btn')) {
+                    const row = e.target.closest('tr');
+                    const id = row.getAttribute('data-id');
+                    
+                    // Eliminar cliente del almacenamiento
+                    clientes = clientes.filter(cliente => cliente.id !== id);
+                    localStorage.setItem('clientes', JSON.stringify(clientes));
+                    
+                    // Eliminar de la tabla
+                    row.remove();
+                }
+            });
+            
+            // Registrar nuevo cliente
+            document.getElementById('registrar-cliente').addEventListener('click', function() {
+                const razonSocial = document.getElementById('razon-social').value;
+                const ruc = document.getElementById('ruc').value;
+                const direccion = document.getElementById('direccion').value;
+                const telefono = document.getElementById('telefono').value;
+                const email = document.getElementById('email').value;
+                
+                if (!razonSocial || !ruc || !direccion) {
+                    alert('Por favor complete los campos requeridos (Razón Social, RUC y Dirección)');
+                    return;
+                }
+                
+                // Crear nuevo cliente
+                const nuevoCliente = {
+                    id: 'CL' + clienteCounter.toString().padStart(3, '0'),
+                    razonSocial,
+                    ruc,
+                    direccion,
+                    telefono: telefono || '',
+                    email: email || ''
+                };
+                
+                // Incrementar contador
+                clienteCounter++;
+                localStorage.setItem('clienteCounter', clienteCounter);
+                
+                // Agregar a la lista de clientes
+                clientes.push(nuevoCliente);
+                localStorage.setItem('clientes', JSON.stringify(clientes));
+                
+                // Limpiar formulario
+                document.getElementById('razon-social').value = '';
+                document.getElementById('ruc').value = '';
+                document.getElementById('direccion').value = '';
+                document.getElementById('telefono').value = '';
+                document.getElementById('email').value = '';
+                
+                // Mostrar mensaje de éxito
+                alert('Cliente registrado exitosamente');
+                
+                // Ir a la sección de listado
+                showSection('listado');
+            });
+            
+            // Función para generar código de boleta
+            function generarCodigoBoleta() {
+                const currentYear = new Date().getFullYear();
+                const codigo = `${currentYear}-${boletaCounter.toString().padStart(5, '0')}`;
+                boletaCounter++;
+                localStorage.setItem('boletaCounter', boletaCounter);
+                return codigo;
+            }
+            
+            // Guardar nueva boleta
+            document.getElementById('guardar-boleta').addEventListener('click', function() {
+                const clienteSelect = document.getElementById('cliente-select');
+                const selectedOption = clienteSelect.options[clienteSelect.selectedIndex];
+                
+                if (!selectedOption.value) {
+                    alert('Por favor seleccione un cliente');
+                    return;
+                }
+                
+                const razonSocial = selectedOption.textContent;
+                const ruc = selectedOption.getAttribute('data-ruc') || '';
+                const direccion = selectedOption.getAttribute('data-direccion') || '';
+                const numMuestras = parseInt(document.getElementById('num-muestras').value) || 1;
+                
+                // Obtener costos de muestras
+                const montos = [];
+                let total = 0;
+                
+                document.querySelectorAll('.costo-muestra').forEach(input => {
+                    const monto = parseFloat(input.value) || 0;
+                    montos.push(monto);
+                    total += monto;
+                });
+                
+                // Crear nueva boleta
+                const nuevaBoleta = {
+                    codigo: generarCodigoBoleta(),
+                    razonSocial,
+                    ruc,
+                    direccion,
+                    numMuestras,
+                    montos,
+                    total,
+                    cancelado: false,
+                    fecha: new Date().toISOString()
+                };
+                
+                // Agregar a la lista de boletas
+                boletas.push(nuevaBoleta);
+                localStorage.setItem('boletas', JSON.stringify(boletas));
+                
+                // Mostrar mensaje de éxito
+                alert(`Boleta ${nuevaBoleta.codigo} registrada exitosamente`);
+                
+                // Ir a la sección de registro de boletas
+                showSection('registro-boletas');
+            });
+            
+            // Renderizar tabla de boletas
+            function renderBoletasTable() {
+                const tbody = document.getElementById('boletas-body');
+                tbody.innerHTML = '';
+                
+                // Ordenar boletas por fecha (más recientes primero)
+                const boletasOrdenadas = [...boletas].sort((a, b) => 
+                    new Date(b.fecha) - new Date(a.fecha)
+                );
+                
+                boletasOrdenadas.forEach(boleta => {
+                    const row = document.createElement('tr');
+                    row.setAttribute('data-codigo', boleta.codigo);
+                    
+                    // Aplicar estilo si no está cancelada
+                    if (!boleta.cancelado) {
+                        row.classList.add('boleta-pending');
+                    }
+                    
+                    row.innerHTML = `
+                        <td>${boleta.codigo}</td>
+                        <td>${boleta.razonSocial}</td>
+                        <td>${boleta.ruc}</td>
+                        <td>${boleta.direccion}</td>
+                        <td>${boleta.numMuestras}</td>
+                        <td>S/ ${boleta.total.toFixed(2)}</td>
+                        <td class="cancelado-cell">
+                            <input type="checkbox" ${boleta.cancelado ? 'checked' : ''} 
+                                   class="cancelado-checkbox" data-codigo="${boleta.codigo}">
+                        </td>
+                        <td class="action-buttons">
+                            <button class="print-boleta" data-codigo="${boleta.codigo}">
+                                <i class="fas fa-print"></i> Imprimir
+                            </button>
+                            <button class="delete-boleta" data-codigo="${boleta.codigo}">Eliminar</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+            
+            // Evento para cambiar estado de cancelación
+            document.getElementById('boletas-body').addEventListener('change', function(e) {
+                if (e.target.classList.contains('cancelado-checkbox')) {
+                    const codigo = e.target.getAttribute('data-codigo');
+                    const boleta = boletas.find(b => b.codigo === codigo);
+                    
+                    if (boleta) {
+                        boleta.cancelado = e.target.checked;
+                        localStorage.setItem('boletas', JSON.stringify(boletas));
+                        
+                        // Actualizar estilo de la fila
+                        const row = e.target.closest('tr');
+                        if (boleta.cancelado) {
+                            row.classList.remove('boleta-pending');
+                        } else {
+                            row.classList.add('boleta-pending');
+                        }
+                    }
+                }
+            });
+            
+            // Evento para eliminar boleta
+            document.getElementById('boletas-body').addEventListener('click', function(e) {
+                if (e.target.classList.contains('delete-boleta') || 
+                    e.target.closest('.delete-boleta')) {
+                    const btn = e.target.classList.contains('delete-boleta') 
+                        ? e.target 
+                        : e.target.closest('.delete-boleta');
+                    const codigo = btn.getAttribute('data-codigo');
+                    
+                    if (confirm('¿Está seguro que desea eliminar esta boleta? Esta acción no se puede deshacer.')) {
+                        // Eliminar boleta del almacenamiento
+                        boletas = boletas.filter(boleta => boleta.codigo !== codigo);
+                        localStorage.setItem('boletas', JSON.stringify(boletas));
+                        
+                        // Eliminar de la tabla
+                        const row = btn.closest('tr');
+                        row.remove();
+                    }
+                }
+                
+                // Evento para imprimir boleta
+                if (e.target.classList.contains('print-boleta') || 
+                    e.target.closest('.print-boleta')) {
+                    const btn = e.target.classList.contains('print-boleta') 
+                        ? e.target 
+                        : e.target.closest('.print-boleta');
+                    const codigo = btn.getAttribute('data-codigo');
+                    imprimirBoleta(codigo);
+                }
+            });
+            
+            // Función para imprimir una boleta específica
+            function imprimirBoleta(codigo) {
+                const boleta = boletas.find(b => b.codigo === codigo);
+                if (!boleta) return;
+                
+                // Crear un nuevo contenedor para la impresión
+                const printContainer = document.createElement('div');
+                printContainer.className = 'a4-container';
+                printContainer.innerHTML = `
+                    <div class="template-preview">
+                        <div class="template-header">
+                            <h2>JC PATH LAB</h2>
+                            <p>Laboratorio de Anatomía Patológica</p>
+                        </div>
+                        <div class="boleta-title">BOLETA DE VENTA</div>
+                        
+                        <div class="template-body">
+                            <div class="template-row">
+                                <div class="template-label">EMISOR:</div>
+                                <div class="template-value"></div>
+                            </div>
+                            
+                            <div class="template-row">
+                                <div class="template-label">NOMBRE:</div>
+                                <div class="template-value">Josehp Cristopher Castillo Cuenca</div>
+                            </div>
+                            
+                            <div class="template-row">
+                                <div class="template-label">DOCUMENTO:</div>
+                                <div class="template-value">DNI 41457466</div>
+                            </div>
+                            
+                            <div class="template-row">
+                                <div class="template-label">DIRECCIÓN:</div>
+                                <div class="template-value">MZ M2 LOTE 13 URB. JARDINES DE CHILLON</div>
+                            </div>
+                            
+                            <div class="template-row">
+                                <div class="template-label">RUC Emisor:</div>
+                                <div class="template-value">10414573667</div>
+                            </div>
+                            
+                            <div class="template-row" style="border-bottom: 2px solid var(--border); margin: 10mm 0;"></div>
+                            
+                            <div class="template-row">
+                                <div class="template-label" style="font-size: 1.2em; color: var(--primary);">CLIENTE:</div>
+                                <div class="template-value"></div>
+                            </div>
+                            
+                            <div class="template-row">
+                                <div class="template-label">Razón Social:</div>
+                                <div class="template-value">${boleta.razonSocial}</div>
+                            </div>
+                            
+                            <div class="template-row">
+                                <div class="template-label">RUC:</div>
+                                <div class="template-value">${boleta.ruc}</div>
+                            </div>
+                            
+                            <div class="template-row">
+                                <div class="template-label">Dirección:</div>
+                                <div class="template-value">${boleta.direccion}</div>
+                            </div>
+                            
+                            <div class="template-row">
+                                <div class="template-label">Número de muestras:</div>
+                                <div class="template-value">${boleta.numMuestras}</div>
+                            </div>
+                            
+                            <div id="costos-container">
+                                ${boleta.montos.map((monto, index) => `
+                                    <div class="template-row costo-item">
+                                        <div class="template-label">Muestra ${index + 1} Costo:</div>
+                                        <div class="template-value">S/ ${monto.toFixed(2)}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            
+                            <div class="total-container">
+                                <div class="template-label">Pago total:</div>
+                                <div class="template-value">S/ ${boleta.total.toFixed(2)}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="location-date">Puente Piedra, ${formatDate(new Date(boleta.fecha))}</div>
+                    </div>
+                `;
+                
+                // Agregar al cuerpo del documento
+                document.body.appendChild(printContainer);
+                
+                // Imprimir
+                window.print();
+                
+                // Eliminar el contenedor después de imprimir
+                setTimeout(() => {
+                    document.body.removeChild(printContainer);
+                }, 100);
+            }
+            
+            // Función para formatear fecha
+            function formatDate(date) {
+                const options = { day: 'numeric', month: 'long', year: 'numeric' };
+                return date.toLocaleDateString('es-ES', options);
+            }
+            
+            // Mostrar sección de inicio por defecto
+            showSection('inicio');
+            
+            // Función para formatear la fecha actual
+            function formatCurrentDate() {
+                const now = new Date();
+                return formatDate(now);
+            }
+            
+            // Actualizar la fecha en la plantilla de boleta
+            const dateElement = document.getElementById('current-date');
+            if (dateElement) {
+                dateElement.textContent = formatCurrentDate();
+            }
+            
+            // Poblar select de clientes
+            function populateClientSelect() {
+                const select = document.getElementById('cliente-select');
+                
+                // Limpiar select
+                select.innerHTML = '<option value="">Seleccione un cliente</option>';
+                
+                clientes.forEach(cliente => {
+                    const option = document.createElement('option');
+                    option.value = cliente.id;
+                    option.textContent = cliente.razonSocial;
+                    option.setAttribute('data-ruc', cliente.ruc);
+                    option.setAttribute('data-direccion', cliente.direccion);
+                    select.appendChild(option);
+                });
+            }
+            
+            // Renderizar tabla de clientes
+            function renderClientesTable() {
+                const tbody = document.getElementById('clientes-body');
+                tbody.innerHTML = '';
+                
+                clientes.forEach(cliente => {
+                    const row = document.createElement('tr');
+                    row.setAttribute('data-id', cliente.id);
+                    row.innerHTML = `
+                        <td>${cliente.id}</td>
+                        <td>${cliente.razonSocial}</td>
+                        <td>${cliente.ruc}</td>
+                        <td>${cliente.direccion}</td>
+                        <td>${cliente.telefono}</td>
+                        <td>${cliente.email}</td>
+                        <td>
+                            <button class="btn eliminar-btn">Eliminar</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+            
+            // Evento para selección de cliente
+            document.getElementById('cliente-select').addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                document.getElementById('ruc-cliente').textContent = selectedOption.getAttribute('data-ruc') || '';
+                document.getElementById('direccion-cliente').textContent = selectedOption.getAttribute('data-direccion') || '';
+            });
+            
+            // Generar campos de costo dinámicamente
+            document.getElementById('num-muestras').addEventListener('change', function() {
+                const numMuestras = parseInt(this.value) || 1;
+                const container = document.getElementById('costos-container');
+                container.innerHTML = '';
+                
+                for (let i = 1; i <= numMuestras; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'template-row costo-item';
+                    div.innerHTML = `
+                        <div class="template-label">Muestra ${i} Costo:</div>
+                        <div class="template-value">
+                            <input type="number" class="costo-input costo-muestra" min="0" step="0.01" placeholder="S/ 0.00" data-index="${i}">
+                        </div>
+                    `;
+                    container.appendChild(div);
+                }
+                
+                // Agregar eventos a los nuevos campos
+                document.querySelectorAll('.costo-muestra').forEach(input => {
+                    input.addEventListener('input', calcularTotal);
+                });
+            });
+            
+            // Calcular total
+            function calcularTotal() {
+                let total = 0;
+                document.querySelectorAll('.costo-muestra').forEach(input => {
+                    total += parseFloat(input.value) || 0;
+                });
+                document.getElementById('pago-total').textContent = `S/ ${total.toFixed(2)}`;
+            }
+            
+            // Inicializar campos de costo
+            document.getElementById('num-muestras').dispatchEvent(new Event('change'));
+            
+            // Renderizar tabla de clientes al cargar
+            renderClientesTable();
+            
+            // Renderizar tabla de boletas al cargar
+            renderBoletasTable();
+        });
+    </script>
+
+</body></html>
