@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Acceso - Laboratorio de Anatomía Patológica</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ======  RESET Y VARIABLES  ====== */
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+        :root{
+            --primary:#2c497e;--secondary:#3a6ea5;--accent:#4b8fcc;--light:#f0f7ff;
+            --dark:#1a2a4a;--gray:#6c757d;--error:#dc3545;--success:#28a745;
+        }
+        /* ======  ANIMACIONES LIGERAS  ====== */
+        @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+        body{background:linear-gradient(135deg,#e6f0ff,#f8fbff);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:10px}
+        .container{background:#fff;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.15);width:100%;max-width:950px;display:flex;overflow:hidden;animation:fadeIn .4s}
+        /* ======  PANEL IZQUIERDO  ====== */
+        .left-panel{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;padding:40px 30px;display:flex;flex-direction:column;justify-content:center;flex:1;min-width:280px}
+        .logo{display:flex;align-items:center;margin-bottom:25px;font-size:22px;font-weight:700}
+        .logo i{font-size:32px;margin-right:10px}
+        .welcome-title{font-size:28px;margin-bottom:15px;line-height:1.2}
+        .welcome-text{font-size:16px;opacity:.9;margin-bottom:25px}
+        .feature{display:flex;align-items:center;margin-bottom:15px;font-size:15px}
+        .feature i{margin-right:10px;font-size:20px;color:var(--accent)}
+        /* ======  PANEL DERECHO  ====== */
+        .right-panel{padding:40px 25px;display:flex;align-items:center;justify-content:center;flex:1}
+        .login-container{width:100%;max-width:320px}
+        .login-title{font-size:24px;color:var(--dark);margin-bottom:25px;text-align:center}
+        .form-group{position:relative;margin-bottom:20px}
+        .form-control{width:100%;padding:15px 15px 15px 45px;border:1px solid #ccc;border-radius:10px;font-size:16px;outline:none;transition:border .2s}
+        .form-control:focus{border-color:var(--accent)}
+        .input-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--gray)}
+        .password-toggle{position:absolute;right:15px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--gray)}
+        .login-btn{width:100%;padding:15px;border:none;border-radius:10px;background:linear-gradient(to right,var(--primary),var(--secondary));color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:background .3s}
+        .login-btn:hover{background:var(--accent)}
+        .error-message{color:var(--error);text-align:center;margin-top:10px;font-size:14px;height:20px}
+        .footer{font-size:12px;color:var(--gray);text-align:center;margin-top:20px}
+        /* ======  ADMIN PANEL  ====== */
+        .admin-container{display:flex;width:100%;min-height:100vh}
+        .user-list-panel{flex:1;padding:25px;background:#f8fbff;overflow:auto}
+        .user-list-title{font-size:22px;margin-bottom:15px;border-bottom:2px solid var(--accent);padding-bottom:5px}
+        .user-table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.05);font-size:14px}
+        .user-table th,.user-table td{padding:10px;text-align:left}
+        .user-table th{background:var(--primary);color:#fff}
+        .delete-btn{background:var(--error);color:#fff;border:none;padding:5px 8px;border-radius:5px;cursor:pointer;font-size:12px}
+        .admin-actions-panel{width:260px;background:#fff;padding:25px;border-left:1px solid #eaeaea}
+        .action-btn{display:block;width:100%;padding:14px;margin-bottom:12px;border:none;border-radius:10px;background:linear-gradient(to right,var(--primary),var(--secondary));color:#fff;font-size:15px;cursor:pointer}
+        .action-btn.logout{background:#fff;color:var(--primary);border:1px solid var(--primary)}
+        /* ======  RESPONSIVE  ====== */
+        @media(max-width:768px){
+            .container{flex-direction:column;border-radius:0;height:100vh}
+            .left-panel,.right-panel{padding:30px 20px}
+            .welcome-title{font-size:24px}
+            .admin-container{flex-direction:column}
+            .admin-actions-panel{width:100%;border:none;border-top:1px solid #eaeaea}
+            .user-table th,.user-table td{padding:8px;font-size:13px}
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN -->
+    <div class="container" id="loginContainer">
+        <div class="left-panel">
+            <div class="logo"><i class="fas fa-microscope"></i>LAB PATOLÓGICA</div>
+            <h1 class="welcome-title">Sistema de Gestión de Diagnósticos</h1>
+            <p class="welcome-text">Accede a nuestra plataforma segura para gestionar diagnósticos y colaborar con el equipo médico.</p>
+            <div class="feature"><i class="fas fa-shield-alt"></i>Plataforma segura HIPAA</div>
+            <div class="feature"><i class="fas fa-file-medical"></i>Historial completo de pacientes</div>
+            <div class="feature"><i class="fas fa-sync-alt"></i>Sincronización en tiempo real</div>
+        </div>
+        <div class="right-panel">
+            <div class="login-container">
+                <h2 class="login-title">Acceso al Sistema</h2>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <i class="fas fa-user input-icon"></i>
+                        <input type="text" class="form-control" id="username" placeholder="Usuario" required>
+                    </div>
+                    <div class="form-group">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" class="form-control" id="password" placeholder="Contraseña" required>
+                        <i class="fas fa-eye password-toggle" id="togglePassword"></i>
+                    </div>
+                    <button type="submit" class="login-btn">Iniciar Sesión</button>
+                    <div class="error-message" id="errorMessage"></div>
+                </form>
+                <div class="footer">© 2023 Laboratorio de Anatomía Patológica</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="adminPanel" class="admin-container" style="display:none">
+        <div class="user-list-panel">
+            <h2 class="user-list-title">Usuarios del Sistema</h2>
+            <table class="user-table">
+                <thead><tr><th>Usuario</th><th>Permisos</th><th>Último Acceso</th><th>Acciones</th></tr></thead>
+                <tbody id="userList"></tbody>
+            </table>
+        </div>
+        <div class="admin-actions-panel">
+            <h2>Acciones</h2>
+            <button id="proceedBtn" class="action-btn">Proseguir Ingreso</button>
+            <button id="createUserBtn" class="action-btn">Crear Usuario</button>
+            <button id="logoutAdminBtn" class="action-btn logout">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <script>
+        /* ======  CONFIG  ====== */
+        const APP_CONFIG = { STORAGE_KEY:'lab_users_data', SESSION_KEY:'lab_current_session' };
+        class UserManager{
+            constructor(){
+                this.users=new Map();
+                this.init();
+            }
+            init(){
+                const stored=localStorage.getItem(APP_CONFIG.STORAGE_KEY);
+                if(stored) this.users=new Map(JSON.parse(stored).users||[]);
+                if(!this.users.has('josehpcastillo')){
+                    this.users.set('josehpcastillo',{username:'josehpcastillo',password:'41457466',permissions:'admin',status:'active',lastLogin:null});
+                    this.save();
+                }
+                this.bindEvents();
+            }
+            save(){
+                localStorage.setItem(APP_CONFIG.STORAGE_KEY,JSON.stringify({users:Array.from(this.users.entries())}));
+            }
+            auth(u,p){
+                const user=this.users.get(u);
+                if(user && user.password===p && user.status==='active'){
+                    user.lastLogin=new Date().toLocaleString();
+                    this.save();
+                    sessionStorage.setItem(APP_CONFIG.SESSION_KEY,JSON.stringify(user));
+                    return true;
+                }
+                return false;
+            }
+            create(u,p){
+                if(this.users.has(u)) return alert('Usuario ya existe');
+                this.users.set(u,{username:u,password:p,permissions:'lectura',status:'active',lastLogin:null});
+                this.save(); this.render(); alert('Usuario creado');
+            }
+            del(u){
+                if(u==='josehpcastillo') return alert('No se puede eliminar admin');
+                this.users.delete(u); this.save(); this.render();
+            }
+            render(){
+                const list=document.getElementById('userList'); list.innerHTML='';
+                this.users.forEach((user,u)=>{
+                    list.insertAdjacentHTML('beforeend',`
+                        <tr>
+                            <td>${u}</td><td>${user.permissions}</td><td>${user.lastLogin||'Nunca'}</td>
+                            <td>${u!=='josehpcastillo'?`<button class="delete-btn" data-u="${u}">Eliminar</button>`:'-'}</td>
+                        </tr>`);
+                });
+                document.querySelectorAll('.delete-btn').forEach(b=>b.onclick=e=>confirm('¿Eliminar?')&&this.del(e.target.dataset.u));
+            }
+            bindEvents(){
+                // 🔐 EVENTO CORREGIDO PARA REDIRECCIÓN EXITOSA
+                document.getElementById('loginForm').onsubmit = (e) => {
+                    e.preventDefault();
+                    const u = document.getElementById('username').value;
+                    const p = document.getElementById('password').value;
+                    
+                    if(this.auth(u,p)){
+                        // Guardar sesión antes de redirigir
+                        sessionStorage.setItem('current_user', JSON.stringify(this.users.get(u)));
+                        
+                        document.getElementById('loginContainer').style.display='none';
+                        document.getElementById('adminPanel').style.display='flex';
+                        this.render();
+                        
+                        // 🔥 REDIRIGIR CORRECTAMENTE A pagina2.html
+                        setTimeout(()=>{
+                            window.location.href='pagina2.html';
+                        },100);
+                    }else{
+                        document.getElementById('errorMessage').textContent='Credenciales inválidas';
+                    }
+                };
+                
+                document.getElementById('togglePassword').onclick=()=>{
+                    const i=document.getElementById('password');
+                    i.type=i.type==='password'?'text':'password';
+                };
+                
+                // 🔥 BOTÓN PROCEDER AHORA REDIRIGE CORRECTAMENTE
+                document.getElementById('proceedBtn').onclick=()=>{
+                    window.location.href='pagina2.html';
+                };
+                
+                document.getElementById('createUserBtn').onclick=()=>{
+                    const u=prompt('Usuario'),p=prompt('Contraseña');
+                    if(u&&p) this.create(u,p);
+                };
+                document.getElementById('logoutAdminBtn').onclick=()=>{
+                    document.getElementById('adminPanel').style.display='none';
+                    document.getElementById('loginContainer').style.display='flex';
+                    document.getElementById('loginForm').reset();
+                    sessionStorage.clear();
+                };
+            }
+        }
+        new UserManager();
+    </script>
+</body>
+</html>

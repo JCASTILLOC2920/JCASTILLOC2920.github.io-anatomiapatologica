@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperación de Datos - JC PATH LAB</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1e88e5;
+            --primary-dark: #0d47a1;
+            --secondary: #ff9800;
+            --secondary-dark: #f57c00;
+            --text: #333;
+            --text-light: #666;
+            --bg: #f0f2f5;
+            --sidebar-bg: #2c3e50;
+            --sidebar-hover: #34495e;
+            --card-bg: #ffffff;
+            --border: #e0e0e0;
+            --success: #4caf50;
+            --error: #e53935;
+            --table-header: #e3f2fd;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            color: var(--primary-dark);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--table-header);
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-dark));
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #2e7d32);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .results-container {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 5px;
+        }
+        
+        .status-success {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .status-warning {
+            background-color: #ff9800;
+            color: white;
+        }
+        
+        .status-error {
+            background-color: #e53935;
+            color: white;
+        }
+        
+        .status-info {
+            background-color: #2196f3;
+            color: white;
+        }
+        
+        .instructions {
+            background-color: #e3f2fd;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+        }
+        
+        .instructions h3 {
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .data-table th {
+            background-color: var(--table-header);
+            text-align: left;
+            padding: 12px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .data-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .data-table tr:hover {
+            background-color: #f5f9ff;
+        }
+        
+        .action-buttons {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
+        @media (max-width: 768px) {
+            .btn {
+                width: 100%;
+                margin: 5px 0;
+            }
+            
+            .action-buttons {
+                display: flex;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-database"></i> Recuperación de Datos Perdidos</h1>
+            <p>Herramienta especializada para recuperar datos de médicos y plantillas</p>
+        </div>
+        
+        <div class="instructions">
+            <h3><i class="fas fa-info-circle"></i> Instrucciones de Uso</h3>
+            <ol>
+                <li><strong>Buscar Datos</strong>: Haz clic en "Buscar Datos Perdidos" para escanear todas las ubicaciones de almacenamiento</li>
+                <li><strong>Revisar Resultados</strong>: Examina los resultados para identificar datos recuperables</li>
+                <li><strong>Recuperar</strong>: Si se encuentran datos, haz clic en "Recuperar Datos" para restaurarlos</li>
+                <li><strong>Exportar</strong>: Guarda una copia de seguridad de los datos recuperados</li>
+                <li><strong>Verificar</strong>: Confirma que los datos se han restaurado correctamente en las páginas correspondientes</li>
+            </ol>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-heartbeat"></i> Recuperación de Médicos</h2>
+            </div>
+            <div class="card-body">
+                <div class="section">
+                    <h3 class="section-title">Acciones de Recuperación</h3>
+                    <div class="action-buttons">
+                        <button id="search-doctors-btn" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Buscar Médicos Perdidos
+                        </button>
+                        <button id="recover-doctors-btn" class="btn btn-secondary" disabled>
+                            <i class="fas fa-sync-alt"></i> Recuperar Médicos
+                        </button>
+                        <button id="export-doctors-btn" class="btn btn-success" disabled>
+                            <i class="fas fa-download"></i> Exportar Médicos
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3 class="section-title">Resultados de Búsqueda</h3>
+                    <div id="doctors-results" class="results-container">
+Haz clic en "Buscar Médicos Perdidos" para comenzar...
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3 class="section-title">Médicos Recuperados</h3>
+                    <div id="doctors-table-container">
+                        <p id="doctors-table-placeholder">No hay médicos recuperados para mostrar</p>
+                        <table id="doctors-table" class="data-table" style="display: none;">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre Completo</th>
+                                    <th>Especialidad</th>
+                                    <th>Clínica</th>
+                                    <th>Fecha Registro</th>
+                                </tr>
+                            </thead>
+                            <tbody id="doctors-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-file-medical"></i> Recuperación de Plantillas</h2>
+            </div>
+            <div class="card-body">
+                <div class="section">
+                    <h3 class="section-title">Acciones de Recuperación</h3>
+                    <div class="action-buttons">
+                        <button id="search-templates-btn" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Buscar Plantillas Perdidas
+                        </button>
+                        <button id="recover-templates-btn" class="btn btn-secondary" disabled>
+                            <i class="fas fa-sync-alt"></i> Recuperar Plantillas
+                        </button>
+                        <button id="export-templates-btn" class="btn btn-success" disabled>
+                            <i class="fas fa-download"></i> Exportar Plantillas
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3 class="section-title">Resultados de Búsqueda</h3>
+                    <div id="templates-results" class="results-container">
+Haz clic en "Buscar Plantillas Perdidas" para comenzar...
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3 class="section-title">Plantillas Recuperadas</h3>
+                    <div id="templates-table-container">
+                        <p id="templates-table-placeholder">No hay plantillas recuperadas para mostrar</p>
+                        <table id="templates-table" class="data-table" style="display: none;">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Tipo</th>
+                                    <th>Descripción</th>
+                                    <th>Fecha Creación</th>
+                                </tr>
+                            </thead>
+                            <tbody id="templates-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables para almacenar datos recuperados
+        let recoveredDoctors = [];
+        let recoveredTemplates = [];
+        
+        // Función para mostrar resultados en el área de resultados
+        function displayDoctorResults(message) {
+            const resultsArea = document.getElementById('doctors-results');
+            resultsArea.textContent = message;
+            console.log(message);
+        }
+        
+        function displayTemplateResults(message) {
+            const resultsArea = document.getElementById('templates-results');
+            resultsArea.textContent = message;
+            console.log(message);
+        }
+        
+        // Función para actualizar la tabla de médicos
+        function updateDoctorsTable() {
+            const table = document.getElementById('doctors-table');
+            const placeholder = document.getElementById('doctors-table-placeholder');
+            const tbody = document.getElementById('doctors-table-body');
+            
+            if (recoveredDoctors.length === 0) {
+                table.style.display = 'none';
+                placeholder.style.display = 'block';
+                placeholder.textContent = 'No hay médicos recuperados para mostrar';
+                return;
+            }
+            
+            // Limpiar tabla
+            tbody.innerHTML = '';
+            
+            // Agregar datos
+            recoveredDoctors.forEach(doctor => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${doctor.id || 'N/A'}</td>
+                    <td>${doctor.nombreCompleto || doctor.nombres + ' ' + doctor.apellidos || 'N/A'}</td>
+                    <td>${doctor.especialidad || 'N/A'}</td>
+                    <td>${doctor.clinica || 'N/A'}</td>
+                    <td>${doctor.fechaRegistro ? new Date(doctor.fechaRegistro).toLocaleDateString() : 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Mostrar tabla
+            table.style.display = 'table';
+            placeholder.style.display = 'none';
+        }
+        
+        // Función para actualizar la tabla de plantillas
+        function updateTemplatesTable() {
+            const table = document.getElementById('templates-table');
+            const placeholder = document.getElementById('templates-table-placeholder');
+            const tbody = document.getElementById('templates-table-body');
+            
+            if (recoveredTemplates.length === 0) {
+                table.style.display = 'none';
+                placeholder.style.display = 'block';
+                placeholder.textContent = 'No hay plantillas recuperadas para mostrar';
+                return;
+            }
+            
+            // Limpiar tabla
+            tbody.innerHTML = '';
+            
+            // Agregar datos
+            recoveredTemplates.forEach(template => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${template.id || 'N/A'}</td>
+                    <td>${template.nombre || 'N/A'}</td>
+                    <td>${template.tipo || 'N/A'}</td>
+                    <td>${template.descripcion || template.contenido ? template.contenido.substring(0, 50) + '...' : 'N/A'}</td>
+                    <td>${template.fechaCreacion ? new Date(template.fechaCreacion).toLocaleDateString() : 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Mostrar tabla
+            table.style.display = 'table';
+            placeholder.style.display = 'none';
+        }
+        
+        // Función para buscar datos de médicos perdidos
+        function searchForLostDoctors() {
+            displayDoctorResults('🔍 Buscando datos de médicos en todas las ubicaciones...\n');
+            
+            let foundData = false;
+            let results = '🔍 Resultados de búsqueda de médicos:\n\n';
+            let potentialData = [];
+            
+            // Buscar en localStorage
+            results += '📦 localStorage:\n';
+            for (let key in localStorage) {
+                if (key.includes('doctor') || key.includes('medico') || key.includes('jcpathlab')) {
+                    try {
+                        const data = localStorage[key];
+                        const parsedData = JSON.parse(data);
+                        
+                        if (Array.isArray(parsedData) && parsedData.length > 0) {
+                            // Verificar si es un array de médicos
+                            const isDoctorsArray = parsedData.some(item => 
+                                item.nombreCompleto || item.nombres || item.apellidos
+                            );
+                            
+                            if (isDoctorsArray) {
+                                results += `  ✅ ${key}: ${parsedData.length} médicos encontrados\n`;
+                                potentialData.push({source: 'localStorage', key, data: parsedData});
+                                foundData = true;
+                            } else {
+                                results += `  ℹ️ ${key}: ${data.length} caracteres (no parece ser médicos)\n`;
+                            }
+                        } else {
+                            results += `  ℹ️ ${key}: ${data.length} caracteres\n`;
+                        }
+                    } catch (e) {
+                        results += `  ⚠️ ${key}: Error al parsear datos\n`;
+                    }
+                }
+            }
+            
+            // Buscar en sessionStorage
+            results += '\n📦 sessionStorage:\n';
+            for (let key in sessionStorage) {
+                if (key.includes('doctor') || key.includes('medico') || key.includes('jcpathlab')) {
+                    try {
+                        const data = sessionStorage[key];
+                        const parsedData = JSON.parse(data);
+                        
+                        if (Array.isArray(parsedData) && parsedData.length > 0) {
+                            // Verificar si es un array de médicos
+                            const isDoctorsArray = parsedData.some(item => 
+                                item.nombreCompleto || item.nombres || item.apellidos
+                            );
+                            
+                            if (isDoctorsArray) {
+                                results += `  ✅ ${key}: ${parsedData.length} médicos encontrados\n`;
+                                potentialData.push({source: 'sessionStorage', key, data: parsedData});
+                                foundData = true;
+                            } else {
+                                results += `  ℹ️ ${key}: ${data.length} caracteres (no parece ser médicos)\n`;
+                            }
+                        } else {
+                            results += `  ℹ️ ${key}: ${data.length} caracteres\n`;
+                        }
+                    } catch (e) {
+                        results += `  ⚠️ ${key}: Error al parsear datos\n`;
+                    }
+                }
+            }
+            
+            // Buscar cookies
+            results += '\n🍪 Cookies:\n';
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name.includes('doctor') || name.includes('medico') || name.includes('jcpathlab')) {
+                    try {
+                        const decodedValue = decodeURIComponent(value);
+                        const parsedData = JSON.parse(decodedValue);
+                        
+                        if (Array.isArray(parsedData) && parsedData.length > 0) {
+                            // Verificar si es un array de médicos
+                            const isDoctorsArray = parsedData.some(item => 
+                                item.nombreCompleto || item.nombres || item.apellidos
+                            );
+                            
+                            if (isDoctorsArray) {
+                                results += `  ✅ ${name}: ${parsedData.length} médicos encontrados\n`;
+                                potentialData.push({source: 'cookies', key: name, data: parsedData});
+                                foundData = true;
+                            } else {
+                                results += `  ℹ️ ${name}: ${decodedValue.length} caracteres (no parece ser médicos)\n`;
+                            }
+                        } else {
+                            results += `  ℹ️ ${name}: ${decodedValue.length} caracteres\n`;
+                        }
+                    } catch (e) {
+                        results += `  ⚠️ ${name}: ${decodeURIComponent(value).length} caracteres\n`;
+                    }
+                }
+            }
+            
+            // Buscar en window.name
+            try {
+                const windowData = JSON.parse(window.name || '{}');
+                results += '\n🌐 window.name:\n';
+                for (let key in windowData) {
+                    if (key.includes('doctor') || key.includes('medico') || key.includes('jcpathlab')) {
+                        try {
+                            const parsedData = JSON.parse(windowData[key]);
+                            
+                            if (Array.isArray(parsedData) && parsedData.length > 0) {
+                                // Verificar si es un array de médicos
+                                const isDoctorsArray = parsedData.some(item => 
+                                    item.nombreCompleto || item.nombres || item.apellidos
+                                );
+                                
+                                if (isDoctorsArray) {
+                                    results += `  ✅ ${key}: ${parsedData.length} médicos encontrados\n`;
+                                    potentialData.push({source: 'window.name', key, data: parsedData});
+                                    foundData = true;
+                                } else {
+                                    results += `  ℹ️ ${key}: ${windowData[key].length} caracteres (no parece ser médicos)\n`;
+                                }
+                            } else {
+                                results += `  ℹ️ ${key}: ${windowData[key].length} caracteres\n`;
+                            }
+                        } catch (e) {
+                            results += `  ℹ️ ${key}: ${windowData[key].length} caracteres\n`;
+                        }
+                    }
+                }
+            } catch (e) {
+                results += '\n🌐 window.name: Error al parsear\n';
+            }
+            
+            results += '\n' + (foundData ? 
+                '✅ ¡Se encontraron datos de médicos! Puedes recuperarlos ahora.' : 
+                '⚠️ No se encontraron datos de médicos significativos.');
+            
+            displayDoctorResults(results);
+            
+            // Habilitar botón de recuperación si se encontraron datos
+            document.getElementById('recover-doctors-btn').disabled = !foundData;
+            
+            // Guardar datos potenciales para recuperación
+            window.potentialDoctorsData = potentialData;
+        }
+        
+        // Función para buscar datos de plantillas perdidas
+        function searchForLostTemplates() {
+            displayTemplateResults('🔍 Buscando datos de plantillas en todas las ubicaciones...\n');
+            
+            let foundData = false;
+            let results = '🔍 Resultados de búsqueda de plantillas:\n\n';
+            let potentialData = [];
+            
+            // Buscar en localStorage
+            results += '📦 localStorage:\n';
+            for (let key in localStorage) {
+                if (key.includes('plantilla') || key.includes('template') || key.includes('jcpathlab')) {
+                    try {
+                        const data = localStorage[key];
+                        const parsedData = JSON.parse(data);
+                        
+                        if (Array.isArray(parsedData) && parsedData.length > 0) {
+                            // Verificar si es un array de plantillas
+                            const isTemplatesArray = parsedData.some(item => 
+                                item.nombre || item.descripcion || item.contenido
+                            );
+                            
+                            if (isTemplatesArray) {
+                                results += `  ✅ ${key}: ${parsedData.length} plantillas encontradas\n`;
+                                potentialData.push({source: 'localStorage', key, data: parsedData});
+                                foundData = true;
+                            } else {
+                                results += `  ℹ️ ${key}: ${data.length} caracteres (no parece ser plantillas)\n`;
+                            }
+                        } else {
+                            results += `  ℹ️ ${key}: ${data.length} caracteres\n`;
+                        }
+                    } catch (e) {
+                        results += `  ⚠️ ${key}: Error al parsear datos\n`;
+                    }
+                }
+            }
+            
+            // Buscar en sessionStorage
+            results += '\n📦 sessionStorage:\n';
+            for (let key in sessionStorage) {
+                if (key.includes('plantilla') || key.includes('template') || key.includes('jcpathlab')) {
+                    try {
+                        const data = sessionStorage[key];
+                        const parsedData = JSON.parse(data);
+                        
+                        if (Array.isArray(parsedData) && parsedData.length > 0) {
+                            // Verificar si es un array de plantillas
+                            const isTemplatesArray = parsedData.some(item => 
+                                item.nombre || item.descripcion || item.contenido
+                            );
+                            
+                            if (isTemplatesArray) {
+                                results += `  ✅ ${key}: ${parsedData.length} plantillas encontradas\n`;
+                                potentialData.push({source: 'sessionStorage', key, data: parsedData});
+                                foundData = true;
+                            } else {
+                                results += `  ℹ️ ${key}: ${data.length} caracteres (no parece ser plantillas)\n`;
+                            }
+                        } else {
+                            results += `  ℹ️ ${key}: ${data.length} caracteres\n`;
+                        }
+                    } catch (e) {
+                        results += `  ⚠️ ${key}: Error al parsear datos\n`;
+                    }
+                }
+            }
+            
+            // Buscar cookies
+            results += '\n🍪 Cookies:\n';
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name.includes('plantilla') || name.includes('template') || name.includes('jcpathlab')) {
+                    try {
+                        const decodedValue = decodeURIComponent(value);
+                        const parsedData = JSON.parse(decodedValue);
+                        
+                        if (Array.isArray(parsedData) && parsedData.length > 0) {
+                            // Verificar si es un array de plantillas
+                            const isTemplatesArray = parsedData.some(item => 
+                                item.nombre || item.descripcion || item.contenido
+                            );
+                            
+                            if (isTemplatesArray) {
+                                results += `  ✅ ${name}: ${parsedData.length} plantillas encontradas\n`;
+                                potentialData.push({source: 'cookies', key: name, data: parsedData});
+                                foundData = true;
+                            } else {
+                                results += `  ℹ️ ${name}: ${decodedValue.length} caracteres (no parece ser plantillas)\n`;
+                            }
+                        } else {
+                            results += `  ℹ️ ${name}: ${decodedValue.length} caracteres\n`;
+                        }
+                    } catch (e) {
+                        results += `  ⚠️ ${name}: ${decodeURIComponent(value).length} caracteres\n`;
+                    }
+                }
+            }
+            
+            // Buscar en window.name
+            try {
+                const windowData = JSON.parse(window.name || '{}');
+                results += '\n🌐 window.name:\n';
+                for (let key in windowData) {
+                    if (key.includes('plantilla') || key.includes('template') || key.includes('jcpathlab')) {
+                        try {
+                            const parsedData = JSON.parse(windowData[key]);
+                            
+                            if (Array.isArray(parsedData) && parsedData.length > 0) {
+                                // Verificar si es un array de plantillas
+                                const isTemplatesArray = parsedData.some(item => 
+                                    item.nombre || item.descripcion || item.contenido
+                                );
+                                
+                                if (isTemplatesArray) {
+                                    results += `  ✅ ${key}: ${parsedData.length} plantillas encontradas\n`;
+                                    potentialData.push({source: 'window.name', key, data: parsedData});
+                                    foundData = true;
+                                } else {
+                                    results += `  ℹ️ ${key}: ${windowData[key].length} caracteres (no parece ser plantillas)\n`;
+                                }
+                            } else {
+                                results += `  ℹ️ ${key}: ${windowData[key].length} caracteres\n`;
+                            }
+                        } catch (e) {
+                            results += `  ℹ️ ${key}: ${windowData[key].length} caracteres\n`;
+                        }
+                    }
+                }
+            } catch (e) {
+                results += '\n🌐 window.name: Error al parsear\n';
+            }
+            
+            results += '\n' + (foundData ? 
+                '✅ ¡Se encontraron datos de plantillas! Puedes recuperarlos ahora.' : 
+                '⚠️ No se encontraron datos de plantillas significativos.');
+            
+            displayTemplateResults(results);
+            
+            // Habilitar botón de recuperación si se encontraron datos
+            document.getElementById('recover-templates-btn').disabled = !foundData;
+            
+            // Guardar datos potenciales para recuperación
+            window.potentialTemplatesData = potentialData;
+        }
+        
+        // Función para recuperar datos de médicos
+        function recoverDoctorsData() {
+            if (!window.potentialDoctorsData || window.potentialDoctorsData.length === 0) {
+                alert('No hay datos de médicos para recuperar. Primero realiza una búsqueda.');
+                return;
+            }
+            
+            // Usar los datos potenciales encontrados
+            recoveredDoctors = window.potentialDoctorsData[0].data;
+            
+            // Mostrar en tabla
+            updateDoctorsTable();
+            
+            // Habilitar botón de exportación
+            document.getElementById('export-doctors-btn').disabled = false;
+            
+            displayDoctorResults(`✅ Datos de médicos recuperados exitosamente!\n\nSe han recuperado ${recoveredDoctors.length} médicos.\n\nPuedes exportar estos datos o guardarlos en el sistema.`);
+        }
+        
+        // Función para recuperar datos de plantillas
+        function recoverTemplatesData() {
+            if (!window.potentialTemplatesData || window.potentialTemplatesData.length === 0) {
+                alert('No hay datos de plantillas para recuperar. Primero realiza una búsqueda.');
+                return;
+            }
+            
+            // Usar los datos potenciales encontrados
+            recoveredTemplates = window.potentialTemplatesData[0].data;
+            
+            // Mostrar en tabla
+            updateTemplatesTable();
+            
+            // Habilitar botón de exportación
+            document.getElementById('export-templates-btn').disabled = false;
+            
+            displayTemplateResults(`✅ Datos de plantillas recuperados exitosamente!\n\nSe han recuperado ${recoveredTemplates.length} plantillas.\n\nPuedes exportar estos datos o guardarlos en el sistema.`);
+        }
+        
+        // Función para exportar datos de médicos
+        function exportDoctorsData() {
+            if (recoveredDoctors.length === 0) {
+                alert('No hay datos de médicos para exportar.');
+                return;
+            }
+            
+            try {
+                const dataStr = JSON.stringify(recoveredDoctors, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'doctors_backup_' + new Date().toISOString().slice(0, 10) + '.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                displayDoctorResults('✅ Datos de médicos exportados exitosamente.\n\nSe ha descargado un archivo de respaldo con ' + recoveredDoctors.length + ' médicos.');
+            } catch (error) {
+                displayDoctorResults('❌ Error al exportar datos de médicos: ' + error.message);
+            }
+        }
+        
+        // Función para exportar datos de plantillas
+        function exportTemplatesData() {
+            if (recoveredTemplates.length === 0) {
+                alert('No hay datos de plantillas para exportar.');
+                return;
+            }
+            
+            try {
+                const dataStr = JSON.stringify(recoveredTemplates, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'templates_backup_' + new Date().toISOString().slice(0, 10) + '.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                displayTemplateResults('✅ Datos de plantillas exportados exitosamente.\n\nSe ha descargado un archivo de respaldo con ' + recoveredTemplates.length + ' plantillas.');
+            } catch (error) {
+                displayTemplateResults('❌ Error al exportar datos de plantillas: ' + error.message);
+            }
+        }
+        
+        // Función para guardar datos recuperados en el sistema
+        function saveRecoveredData() {
+            // Esta función se puede extender para guardar los datos directamente en el sistema
+            // Por ahora, solo muestra un mensaje
+            alert('Los datos recuperados se pueden guardar en el sistema principal manualmente.');
+        }
+        
+        // Configurar event listeners cuando el DOM esté cargado
+        document.addEventListener('DOMContentLoaded', function() {
+            // Botones de búsqueda
+            document.getElementById('search-doctors-btn').addEventListener('click', searchForLostDoctors);
+            document.getElementById('search-templates-btn').addEventListener('click', searchForLostTemplates);
+            
+            // Botones de recuperación
+            document.getElementById('recover-doctors-btn').addEventListener('click', recoverDoctorsData);
+            document.getElementById('recover-templates-btn').addEventListener('click', recoverTemplatesData);
+            
+            // Botones de exportación
+            document.getElementById('export-doctors-btn').addEventListener('click', exportDoctorsData);
+            document.getElementById('export-templates-btn').addEventListener('click', exportTemplatesData);
+            
+            displayDoctorResults('🛠️ Herramienta de recuperación de datos de médicos lista.\n\nHaz clic en "Buscar Médicos Perdidos" para comenzar.');
+            displayTemplateResults('🛠️ Herramienta de recuperación de datos de plantillas lista.\n\nHaz clic en "Buscar Plantillas Perdidas" para comenzar.');
+        });
+    </script>
+</body>
+</html>
