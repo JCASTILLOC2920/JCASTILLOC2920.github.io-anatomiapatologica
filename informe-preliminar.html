@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JC PATH LAB | Informe Preliminar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Dexie.js for IndexedDB wrapper -->
+    <script src="https://unpkg.com/dexie@3.2.2/dist/dexie.js"></script>
+    <style>:root{--primary:#1e88e5;--primary-dark:#0d47a1;--secondary:#ff9800;--secondary-dark:#f57c00;--text:#333;--text-light:#666;--bg:#f0f2f5;--sidebar-bg:#2c3e50;--sidebar-hover:#34495e;--card-bg:#fff;--border:#e0e0e0;--success:#4caf50;--error:#e53935;--table-header:#e3f2fd}*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}body{background-color:var(--bg);color:var(--text);display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;padding:20px;font-family:Arial,sans-serif;position:relative}.a4-container{width:21cm;min-height:29.7cm;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.1);padding:1.5cm;box-sizing:border-box;margin-bottom:20px;font-family:Arial,sans-serif;position:relative;display:flex;flex-direction:column}.preliminary-report{padding:0;background:#fff;font-family:Arial,sans-serif;color:#333;line-height:1.6;width:100%;margin:0 auto;flex:1;display:flex;flex-direction:column}.report-header{text-align:center;margin-bottom:20px;padding-bottom:10px}.report-header img{width:100%;max-width:1044px;height:auto;display:block;margin:0 auto}.patient-info{margin-bottom:20px}.patient-info h3{font-size:13pt;font-weight:700;margin-bottom:10px;border-bottom:1px solid #ddd;padding-bottom:5px;text-align:justify;font-family:Arial,sans-serif}.patient-data-table{width:100%;border-collapse:collapse;margin:15px 0;font-family:Arial,sans-serif}.patient-data-table td{padding:4px;border:1px solid #ddd;vertical-align:top;font-size:9pt;line-height:1.2;font-family:Arial,sans-serif}.patient-data-table .codigo-cell{font-size:16pt;font-weight:700;text-align:center;vertical-align:middle;background-color:#f0f7ff;padding:2px 4px;font-family:Arial,sans-serif}.patient-data-table .info-cell{padding:4px;font-family:Arial,sans-serif}.report-section{margin-bottom:20px}.report-section h3{font-size:13pt;font-weight:700;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #ddd;text-align:justify;font-family:Arial,sans-serif}.report-content{padding-left:20px;font-size:10pt;font-family:Arial,sans-serif;text-align:justify;line-height:1.2}.diagnosis-section{margin-top:25px;font-weight:700}.diagnosis-title{font-size:12pt;text-align:left;margin-bottom:15px;font-weight:700;font-family:Arial,sans-serif}.diagnosis-section .report-content{font-size:12pt;text-align:left;padding-left:0;font-family:Arial,sans-serif}.decorative-line{width:100%;max-width:1031px;height:7px;display:block;margin:10px 0}.report-footer-container{margin-top:auto;padding-top:30px;page-break-inside:avoid}.preliminary-report{display:flex;flex-direction:column;min-height:100vh}.diagnosis-section{margin-bottom:30px}.signature-section{text-align:right;margin-bottom:20px}.signature-image{width:169px;height:91px;display:block;margin-left:auto}.photos-section{margin:30px 0 20px 0;page-break-inside:avoid;clear:both;margin-top:auto;padding-top:40px}.photos-section h3{font-size:13pt;font-weight:700;margin-bottom:15px;padding-bottom:5px;border-bottom:2px solid #333;color:#333;text-align:center;text-transform:uppercase}.photos-grid{display:flex;flex-wrap:wrap;gap:25px;justify-content:center;align-items:flex-start;margin:25px 0;page-break-inside:avoid}.photo-item{text-align:center;page-break-inside:avoid;max-width:220px;margin:0 auto;break-inside:avoid}.photo-label{font-size:11pt;font-weight:700;color:#333;margin-bottom:10px;padding:6px 12px;background:#f8f9fa;border-radius:6px;border:1px solid #ddd}.attached-photo{max-width:200px;max-height:200px;width:auto;height:auto;border:2px solid #333;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.15);object-fit:contain;background:#fff;padding:6px}.page-footer{text-align:center;margin-top:25px}.footer-image{max-width:100%;height:auto;max-height:17px;display:block;margin:0 auto}.report-footer-line{width:100%;height:5px;background-color:var(--primary);margin-top:20px;margin-bottom:10px;page-break-inside:avoid}.document-footer{display:flex;justify-content:space-between;margin-top:20px;font-family:Arial,sans-serif;width:100%}.footer-left{font-size:9pt;text-align:left;font-family:Arial,sans-serif}.footer-right{font-size:8pt;text-align:right;font-family:Arial,sans-serif}.footer-right span{margin-left:10px}.button-container{display:flex;gap:15px;justify-content:center;margin-top:20px;width:21cm}.btn{padding:12px 20px;border:none;border-radius:6px;cursor:pointer;font-size:1rem;font-weight:600;transition:all .3s;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;text-decoration:none;font-family:Arial,sans-serif}.btn:hover{background:linear-gradient(135deg,#1976d2,#0d47a1);transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,.1)}.btn i{margin-right:8px}.btn-print{background:linear-gradient(135deg,var(--secondary),var(--secondary-dark))}.btn-print:hover{background:linear-gradient(135deg,#f57c00,#e65100)}.button-container{background:#fff;padding:15px;margin-bottom:20px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.1);display:flex;gap:10px;flex-wrap:wrap;justify-content:center;position:sticky;top:10px;z-index:100}.btn-print{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border:none;border-radius:6px;padding:12px 20px;cursor:pointer;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all .3s}.btn-print:hover{background:linear-gradient(135deg,var(--primary-dark),#0d47a1);transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,.2)}.btn-edit{background:linear-gradient(135deg,var(--secondary),var(--secondary-dark));color:#fff;border:none;border-radius:6px;padding:12px 20px;cursor:pointer;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all .3s}.btn-edit:hover{background:linear-gradient(135deg,var(--secondary-dark),#e65100);transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,.2)}.btn-back{background:linear-gradient(135deg,#6c757d,#495057);color:#fff;border:none;border-radius:6px;padding:12px 20px;cursor:pointer;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all .3s}.btn-back:hover{background:linear-gradient(135deg,#495057,#343a40);transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,.2)}#loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,.7);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10000;display:none}#loading-overlay .fa-spinner{font-size:50px;margin-bottom:20px}#loading-overlay p{font-size:20px}
+        @media print {
+            body {
+                background-color: #fff;
+            }
+            .button-container {
+                display: none;
+            }
+            .a4-container {
+                box-shadow: none;
+                margin: 0;
+                padding: 1cm;
+            }
+            .report-content {
+                padding-left: 0;
+            }
+            img {
+                visibility: visible !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-overlay">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Generando PDF, por favor espere...</p>
+    </div>
+    <!-- Botones de acción responsivos -->
+    <div class="button-container">
+        <button class="btn-back" onclick="goBack()">
+            <i class="fas fa-arrow-left"></i> Volver
+        </button>
+        <button class="btn-edit" onclick="editReport()">
+            <i class="fas fa-edit"></i> Editar
+        </button>
+        <button class="btn-print" onclick="generarPDF()">
+            <i class="fas fa-file-pdf"></i> Generar PDF
+        </button>
+    </div>
+    
+    <div class="a4-container">
+        <div class="preliminary-report" id="preliminary-report-content">
+            
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            function generarContenidoInforme() {
+                document.getElementById('preliminary-report-content').innerHTML = `
+                    <div class="report-header">
+                        <img src="./informe-preliminar_files/encabezado.png" alt="JC PATH LAB - Encabezado">
+                    </div>
+                    
+                    <div class="patient-info">
+                        <h3>DATOS DEL PACIENTE</h3>
+                        <table class="patient-data-table">
+                            <tbody><tr>
+                                <td class="info-cell" width="70%">
+                                    <strong>APELLIDOS Y NOMBRES:</strong> VARGAS LOZANO ROSA
+                                </td>
+                                <td rowspan="2" class="codigo-cell" width="30%">
+                                    2KQ-402
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="info-cell">
+                                    <strong>SEXO:</strong> FEMENINO
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="info-cell">
+                                    <strong>FECHA RECEPCIÓN:</strong> <span class="fecha-formateada">04-08-2025</span>
+                                </td>
+                                <td class="info-cell">
+                                    <strong>FECHA INFORME:</strong> <span class="fecha-formateada">06-08-2025</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="info-cell">
+                                    <strong>MÉDICO:</strong> -
+                                </td>
+                                <td class="info-cell">
+                                    <strong>CLÍNICA:</strong> -
+                                </td>
+                            </tr>
+                        </tbody></table>
+                    </div>
+                    
+                    <div class="report-section">
+                        <h3>DESCRIPCIÓN MACROSCÓPICA</h3>
+                        <img src="./informe-preliminar_files/linea1.png" alt="Línea decorativa" class="decorative-line">
+                        <div class="report-content">Se reciben múltiples fragmentos irregulares de tejido, de coloración marrón rojiza, de consistencia blanda, el mayor de 0.8 x 0.5 x 0.3 cm.</div>
+                    </div>
+                    
+                    <div class="report-section">
+                        <h3>DESCRIPCIÓN MICROSCÓPICA</h3>
+                        <img src="./informe-preliminar_files/linea2.png" alt="Línea decorativa" class="decorative-line">
+                        <div class="report-content">Se observa tejido de granulación con abundantes células inflamatorias crónicas (linfocitos, plasmocitos) y presencia de células gigantes multinucleadas. No se observa evidencia de malignidad.</div>
+                    </div>
+                    
+                    <div class="diagnosis-section">
+                        <div class="diagnosis-title">DIAGNÓSTICO HISTOLÓGICO:</div>
+                        <div class="report-content">Granuloma piógeno.</div>
+                    </div>
+                    
+                    <!-- Pie de página dentro del A4 -->
+                    <div class="report-footer-container">
+                        <div class="signature-section">
+                            <img src="./informe-preliminar_files/firma.png" alt="Firma del Dr. Joseph Castillo" class="signature-image">
+                        </div>
+                        
+                        <div class="report-footer-line"></div>
+                        
+                        <div class="document-footer">
+                            <div class="footer-left">
+                                2KQ-402 VARGAS LOZANO ROSA
+                            </div>
+                            <div class="footer-right">
+                                <span>página 1 de 1</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function generarPDF() {
+                const buttonContainer = document.querySelector('.button-container');
+                if (buttonContainer) buttonContainer.style.display = 'none';
+                window.print();
+                if (buttonContainer) buttonContainer.style.display = 'flex';
+            }
+
+            generarContenidoInforme();
+
+        });
+
+        function goBack() {
+            window.history.back();
+        }
+
+        function editReport() {
+            // Functionality to edit the report
+        }
+
+        function generarPDF() {
+            const buttonContainer = document.querySelector('.button-container');
+            if (buttonContainer) buttonContainer.style.display = 'none';
+            window.print();
+            if (buttonContainer) buttonContainer.style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
