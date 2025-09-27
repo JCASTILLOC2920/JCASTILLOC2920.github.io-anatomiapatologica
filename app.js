@@ -1,13 +1,356 @@
-const APP_CONFIG={STORAGE_KEY:"lab_users_data",BACKUP_KEY:"lab_users_backup",SESSION_KEY:"lab_current_session",VERSION:"2.0.0"};class UserManager{constructor(){this.users=new Map,this.currentUser=null,this.isInitialized=!1,this.init()}async init(){try{console.log("🚀 Inicializando sistema de usuarios..."),await this.loadUsersFromStorage(),await this.ensureAdminUser(),this.setupEventListeners(),this.isInitialized=!0,console.log("✅ Sistema de usuarios inicializado")}catch(e){console.error("❌ Error inicializando sistema:",e),this.handleError(e)}}async loadUsersFromStorage(){try{const e=localStorage.getItem(APP_CONFIG.STORAGE_KEY);e?(this.users=new Map(JSON.parse(e).users||[]),console.log(`📊 Usuarios cargados: ${this.users.size}`)):(console.log("📝 No hay usuarios almacenados, creando estructura inicial"),this.users=new Map)}catch(e){console.error("❌ Error cargando usuarios:",e),this.users=new Map}}async saveUsersToStorage(){try{const e={users:Array.from(this.users.entries()),lastUpdate:(new Date).toISOString(),version:APP_CONFIG.VERSION};localStorage.setItem(APP_CONFIG.STORAGE_KEY,JSON.stringify(e)),localStorage.setItem(APP_CONFIG.BACKUP_KEY,JSON.stringify(e)),console.log("💾 Usuarios guardados en localStorage")}catch(e){throw console.error("❌ Error guardando usuarios:",e),e}}async ensureAdminUser(){this.users.has("josehpcastillo")||(console.log("👤 Creando usuario administrador..."),this.users.set("josehpcastillo",{username:"josehpcastillo",password:"41457466",permissions:"admin",status:"active",lastLogin:null,createdAt:(new Date).toISOString()}),await this.saveUsersToStorage(),console.log("✅ Usuario administrador creado"))}async authenticateUser(e,t){try{const s=this.users.get(e);if(!s)throw new Error("Usuario no encontrado");if(s.password!==t)throw new Error("Contraseña incorrecta");if("active"!==s.status)throw new Error("Usuario inactivo");return s.lastLogin=(new Date).toISOString(),await this.saveUsersToStorage(),this.currentUser={username:s.username,permissions:s.permissions,loginTime:(new Date).toISOString(),sessionId:"session_"+Date.now()},sessionStorage.setItem(APP_CONFIG.SESSION_KEY,JSON.stringify(this.currentUser)),console.log(`🔐 Usuario autenticado: ${e}`),this.currentUser}catch(e){throw console.error("❌ Error de autenticación:",e),e}}async createUser(e,t){try{if(this.users.has(e))throw new Error("El usuario ya existe");if(e.length<3)throw new Error("El nombre de usuario debe tener al menos 3 caracteres");if(t.length<6)throw new Error("La contraseña debe tener al menos 6 caracteres");const s={username:e,password:t,permissions:"lectura",status:"active",lastLogin:null,createdAt:(new Date).toISOString()};return this.users.set(e,s),await this.saveUsersToStorage(),console.log(`✅ Usuario creado: ${e}`),s}catch(e){throw console.error("❌ Error creando usuario:",e),e}}async deleteUser(e){try{if("josehpcastillo"===e)throw new Error("No se puede eliminar el usuario administrador");if(!this.users.has(e))throw new Error("Usuario no encontrado");return this.users.delete(e),await this.saveUsersToStorage(),console.log(`✅ Usuario eliminado: ${e}`),!0}catch(e){throw console.error("❌ Error eliminando usuario:",e),e}}getUsersList(){return Array.from(this.users.values()).map(e=>({username:e.username,permissions:e.permissions,status:e.status,lastLogin:e.lastLogin,createdAt:e.createdAt}))}logout(){this.currentUser=null,sessionStorage.removeItem(APP_CONFIG.SESSION_KEY),console.log("🔓 Sesión cerrada")}hasActiveSession(){const e=sessionStorage.getItem(APP_CONFIG.SESSION_KEY);if(e)try{return this.currentUser=JSON.parse(e),!0}catch(e){return sessionStorage.removeItem(APP_CONFIG.SESSION_KEY),!1}return!1}setupEventListeners(){const e=document.getElementById("togglePassword"),t=document.getElementById("password");e&&t&&e.addEventListener("click",e=>{e.preventDefault();const s="password"===t.getAttribute("type")?"text":"password";t.setAttribute("type",s),e.classList.toggle("fa-eye"),e.classList.toggle("fa-eye-slash")});const s=document.getElementById("loginForm");s&&s.addEventListener("submit",this.handleLogin.bind(this)),this.setupAdminButtons()}async handleLogin(e){e.preventDefault();const t=document.getElementById("username").value,s=document.getElementById("password").value;try{await this.authenticateUser(t,s),document.getElementById("loginContainer").style.display="none",document.getElementById("adminPanel").style.display="flex",this.loadUserList()}catch(e){this.showError(e.message)}}setupAdminButtons(){const e=document.getElementById("proceedBtn");e&&e.addEventListener("click",()=>{window.location.href="pagina2.html"});const t=document.getElementById("createUserBtn");t&&t.addEventListener("click",this.handleCreateUser.bind(this));const s=document.getElementById("logoutAdminBtn");s&&s.addEventListener("click",this.handleLogout.bind(this)),this.setupPagination()}async handleCreateUser(){try{const e=prompt("Ingrese el nombre de usuario (mínimo 3 caracteres):");if(!e)return;const t=prompt("Ingrese la contraseña (mínimo 6 caracteres):");if(!t)return;await this.createUser(e,t),this.loadUserList(),alert(`✅ Usuario "${e}" creado exitosamente\n\nPermisos: Solo Lectura\nEstado: Activo`)}catch(e){alert(`❌ Error: ${e.message}`)}}handleLogout(){this.logout(),document.getElementById("adminPanel").style.display="none",document.getElementById("loginContainer").style.display="flex",document.getElementById("username").value="",document.getElementById("password").value="",this.clearError()}loadUserList(){const e=document.getElementById("userList");if(e){e.innerHTML="";const t=this.getUsersList();t.forEach(t=>{const s=document.createElement("tr");s.innerHTML=`
-                <td>
-                    <span class="user-status status-${t.status}"></span>
-                    ${t.username}
-                </td>
-                <td>${t.permissions}</td>
-                <td class="last-login">${t.lastLogin?new Date(t.lastLogin).toLocaleString():"Nunca"}</td>
-                <td class="action-cell">
-                    ${"josehpcastillo"!==t.username?`<button class=\"delete-btn\" data-user=\"${t.username}\">
-                            <i class=\"fas fa-trash-alt\"></i> Eliminar
-                        </button>`:'<span class="admin-badge">Administrador</span>'}
-                </td>
-            `,e.appendChild(s)}),this.setupDeleteButtons()}}setupDeleteButtons(){document.querySelectorAll(".delete-btn").forEach(e=>{e.addEventListener("click",async t=>{const s=t.target.closest(".delete-btn").getAttribute("data-user");if(confirm(`¿Está seguro de eliminar al usuario "${s}"?`))try{await this.deleteUser(s),this.loadUserList(),alert(`✅ Usuario "${s}" eliminado correctamente`)}catch(e){alert(`❌ Error: ${e.message}`)}})})}}setupPagination(){const e=document.getElementById("prevPageBtn"),t=document.getElementById("nextPageBtn");e&&e.addEventListener("click",()=>{console.log("Página anterior")}),t&&t.addEventListener("click",()=>{console.log("Página siguiente")})}showError(e){const t=document.getElementById("errorMessage");t&&(t.textContent=e,document.getElementById("loginForm").classList.add("error-animation"),setTimeout(()=>{document.getElementById("loginForm").classList.remove("error-animation")},500))}clearError(){const e=document.getElementById("errorMessage");e&&(e.textContent="")}handleError(e){console.error("Error del sistema:",e),alert(`Error del sistema: ${e.message}`)}}let userManager;function detectMobileDevice(){/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)&&(document.body.classList.add("mobile-device"),document.querySelectorAll('input[type="text"], input[type="password"]').forEach(e=>{e.addEventListener("focus",function(){this.style.fontSize="16px"})}))}function optimizeMobileForms(){document.querySelectorAll("form").forEach(e=>{const t=e.querySelector('input[type="text"]');t&&(t.setAttribute("autocomplete","username"),t.setAttribute("autocapitalize","none"),t.setAttribute("autocorrect","off"));const s=e.querySelector('input[type="password"]');s&&s.setAttribute("autocomplete","current-password")})}function initializeMobileFeatures(){detectMobileDevice(),optimizeMobileForms()}document.addEventListener("DOMContentLoaded",function(){console.log("🚀 Iniciando aplicación..."),userManager=new UserManager}),window.addEventListener("load",function(){console.log("📱 Inicializando funcionalidades móviles..."),userManager&&userManager.hasActiveSession()&&console.log("🔐 Sesión activa detectada")}),initializeMobileFeatures();
+const express = require('express');
+const cors = require('cors');
+const db = require('./database.js');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { verifyToken, isAdmin } = require('./authMiddleware.js');
+
+const app = express();
+const port = 3000;
+const JWT_SECRET = 'your_jwt_secret_key'; // ¡Cambia esto por una clave secreta más segura!
+
+// Middleware
+app.use(cors());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Ruta de prueba
+app.get('/', (req, res) => {
+  res.send('¡El servidor backend está funcionando!');
+});
+
+// --- RUTAS DE AUTENTICACIÓN ---
+
+// Ruta de login (pública)
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Faltan campos requeridos (username, password).' });
+    }
+
+    const sql = 'SELECT * FROM users WHERE username = ?';
+    db.get(sql, [username], (err, user) => {
+        if (err) {
+            return res.status(500).json({ error: 'Error en el servidor.' });
+        }
+        if (!user) {
+            return res.status(401).json({ error: 'Usuario o contraseña incorrectos.' });
+        }
+
+        const passwordIsValid = bcrypt.compareSync(password, user.password);
+        if (!passwordIsValid) {
+            return res.status(401).json({ error: 'Usuario o contraseña incorrectos.' });
+        }
+
+        const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, {
+            expiresIn: 86400 // 24 horas
+        });
+
+        res.status(200).json({
+            message: 'Login exitoso',
+            token: token,
+            user: {
+                id: user.id,
+                username: user.username,
+                role: user.role
+            }
+        });
+    });
+});
+
+// --- RUTAS DE GESTIÓN DE USUARIOS (protegidas) ---
+
+// Registrar un nuevo usuario (solo admin)
+app.post('/api/register', [verifyToken, isAdmin], (req, res) => {
+    const { username, password, role } = req.body;
+
+    if (!username || !password || !role) {
+        return res.status(400).json({ error: 'Faltan campos requeridos (username, password, role).' });
+    }
+    if (role !== 'admin' && role !== 'viewer') {
+        return res.status(400).json({ error: 'El rol debe ser \'admin\' o \'viewer\'.' });
+    }
+
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(password, salt);
+
+    const sql = 'INSERT INTO users (username, password, role) VALUES (?,?,?)';
+    db.run(sql, [username, hashedPassword, role], function(err) {
+        if (err) {
+            return res.status(400).json({ error: 'El nombre de usuario ya existe.' });
+        }
+        res.status(201).json({ message: 'Usuario creado exitosamente.', userId: this.lastID });
+    });
+});
+
+// Obtener todos los usuarios (solo admin)
+app.get('/api/users', [verifyToken, isAdmin], (req, res) => {
+    const sql = "SELECT id, username, role FROM users";
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        res.json({ users: rows });
+    });
+});
+
+// Eliminar un usuario (solo admin)
+app.delete('/api/users/:id', [verifyToken, isAdmin], (req, res) => {
+    const { id } = req.params;
+    // Prevenir que el admin se elimine a sí mismo
+    if (req.user.id == id) {
+        return res.status(400).json({ error: 'No puedes eliminar tu propia cuenta de administrador.' });
+    }
+
+    const sql = 'DELETE FROM users WHERE id = ?';
+    db.run(sql, id, function(err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Usuario no encontrado.' });
+        }
+        res.status(200).json({ message: 'Usuario eliminado exitosamente.' });
+    });
+});
+
+// --- RUTAS DE GESTIÓN DE MÉDICOS (protegidas) ---
+
+// Obtener todos los médicos
+app.get('/api/doctors', [verifyToken], (req, res) => {
+    const sql = "SELECT * FROM doctors";
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ doctors: rows });
+    });
+});
+
+// Crear un nuevo médico (solo admin)
+app.post('/api/doctors', [verifyToken, isAdmin], (req, res) => {
+    const { nombreCompleto, especialidad, clinica } = req.body;
+    if (!nombreCompleto) {
+        return res.status(400).json({ error: 'El campo nombreCompleto es requerido.' });
+    }
+    const sql = 'INSERT INTO doctors (nombreCompleto, especialidad, clinica) VALUES (?,?,?)';
+    db.run(sql, [nombreCompleto, especialidad, clinica], function(err) {
+        if (err) {
+            return res.status(400).json({ error: err.message });
+        }
+        res.status(201).json({ message: 'Médico creado exitosamente.', doctorId: this.lastID });
+    });
+});
+
+// Actualizar un médico (solo admin)
+app.put('/api/doctors/:id', [verifyToken, isAdmin], (req, res) => {
+    const { id } = req.params;
+    const { nombreCompleto, especialidad, clinica } = req.body;
+    if (!nombreCompleto) {
+        return res.status(400).json({ error: 'El campo nombreCompleto es requerido.' });
+    }
+    const sql = 'UPDATE doctors SET nombreCompleto = ?, especialidad = ?, clinica = ? WHERE id = ?';
+    db.run(sql, [nombreCompleto, especialidad, clinica, id], function(err) {
+        if (err) {
+            return res.status(400).json({ error: err.message });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Médico no encontrado.' });
+        }
+        res.status(200).json({ message: 'Médico actualizado exitosamente.' });
+    });
+});
+
+// Eliminar un médico (solo admin)
+app.delete('/api/doctors/:id', [verifyToken, isAdmin], (req, res) => {
+    const { id } = req.params;
+    const sql = 'DELETE FROM doctors WHERE id = ?';
+    db.run(sql, id, function(err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Médico no encontrado.' });
+        }
+        res.status(200).json({ message: 'Médico eliminado exitosamente.' });
+    });
+});
+
+// --- RUTAS DE GESTIÓN DE PLANTILLAS (protegidas) ---
+
+// Obtener todas las plantillas
+app.get('/api/templates', [verifyToken], (req, res) => {
+    const sql = "SELECT * FROM templates";
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ templates: rows });
+    });
+});
+
+// Crear una nueva plantilla (solo admin)
+app.post('/api/templates', [verifyToken, isAdmin], (req, res) => {
+    const { nombre, tipo, especialidad, contenido, diagnostico } = req.body;
+    if (!nombre || !tipo) {
+        return res.status(400).json({ error: 'Los campos nombre y tipo son requeridos.' });
+    }
+    const sql = 'INSERT INTO templates (nombre, tipo, especialidad, contenido, diagnostico) VALUES (?,?,?,?,?)';
+    db.run(sql, [nombre, tipo, especialidad, contenido, diagnostico], function(err) {
+        if (err) {
+            return res.status(400).json({ error: err.message });
+        }
+        res.status(201).json({ message: 'Plantilla creada exitosamente.', templateId: this.lastID });
+    });
+});
+
+// Actualizar una plantilla (solo admin)
+app.put('/api/templates/:id', [verifyToken, isAdmin], (req, res) => {
+    const { id } = req.params;
+    const { nombre, tipo, especialidad, contenido, diagnostico } = req.body;
+    if (!nombre || !tipo) {
+        return res.status(400).json({ error: 'Los campos nombre y tipo son requeridos.' });
+    }
+    const sql = 'UPDATE templates SET nombre = ?, tipo = ?, especialidad = ?, contenido = ?, diagnostico = ? WHERE id = ?';
+    db.run(sql, [nombre, tipo, especialidad, contenido, diagnostico, id], function(err) {
+        if (err) {
+            return res.status(400).json({ error: err.message });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Plantilla no encontrada.' });
+        }
+        res.status(200).json({ message: 'Plantilla actualizada exitosamente.' });
+    });
+});
+
+// Eliminar una plantilla (solo admin)
+app.delete('/api/templates/:id', [verifyToken, isAdmin], (req, res) => {
+    const { id } = req.params;
+    const sql = 'DELETE FROM templates WHERE id = ?';
+    db.run(sql, id, function(err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Plantilla no encontrada.' });
+        }
+        res.status(200).json({ message: 'Plantilla eliminada exitosamente.' });
+    });
+});
+
+// --- RUTAS DE GESTIÓN DE PACIENTES (protegidas) ---
+
+// Registrar un nuevo paciente
+app.post('/api/patients', [verifyToken], (req, res) => {
+    const {
+        service_type, attention_code, dni, age, last_name, first_name, phone, 
+        gender, contact_family, contact_phone, requesting_doctor, study_reason, 
+        clinic, registration_date, delivery_date
+    } = req.body;
+
+    if (!attention_code || !last_name || !first_name) {
+        return res.status(400).json({ error: 'Los campos Cod. Atención, Apellidos y Nombres son requeridos.' });
+    }
+
+    const sql = `INSERT INTO patients (service_type, attention_code, dni, age, last_name, first_name, phone, gender, contact_family, contact_phone, requesting_doctor, study_reason, clinic, registration_date, delivery_date) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+    const params = [service_type, attention_code, dni, age, last_name, first_name, phone, gender, contact_family, contact_phone, requesting_doctor, study_reason, clinic, registration_date, delivery_date];
+
+    db.run(sql, params, function(err) {
+        if (err) {
+            if (err.message.includes('UNIQUE constraint failed')) {
+                return res.status(400).json({ error: 'El código de atención ya existe.' });
+            }
+            return res.status(500).json({ error: err.message });
+        }
+        res.status(201).json({ message: 'Paciente registrado exitosamente.', patientId: this.lastID });
+    });
+});
+
+// Actualizar un paciente
+app.put('/api/patients/:id', [verifyToken], (req, res) => {
+    const { id } = req.params;
+    const {
+        dni, age, last_name, first_name, phone, gender, contact_family, 
+        contact_phone, requesting_doctor, study_reason, clinic, 
+        macro_description, micro_description, diagnosis, photo1, photo2
+    } = req.body;
+
+    const sql = `UPDATE patients SET 
+                    dni = ?,
+                    age = ?,
+                    last_name = ?,
+                    first_name = ?,
+                    phone = ?,
+                    gender = ?,
+                    contact_family = ?,
+                    contact_phone = ?,
+                    requesting_doctor = ?,
+                    study_reason = ?,
+                    clinic = ?,
+                    macro_description = ?,
+                    micro_description = ?,
+                    diagnosis = ?,
+                    photo1 = ?,
+                    photo2 = ?
+                 WHERE id = ?`;
+
+    const params = [dni, age, last_name, first_name, phone, gender, contact_family, contact_phone, requesting_doctor, study_reason, clinic, macro_description, micro_description, diagnosis, photo1, photo2, id];
+
+    db.run(sql, params, function(err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Paciente no encontrado.' });
+        }
+        res.status(200).json({ message: 'Informe guardado exitosamente.' });
+    });
+});
+
+// Obtener todos los pacientes
+app.get('/api/patients', [verifyToken], (req, res) => {
+    const sql = "SELECT * FROM patients ORDER BY id DESC";
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ patients: rows });
+    });
+});
+
+// Obtener un paciente por ID
+app.get('/api/patients/:id', [verifyToken], (req, res) => {
+    const { id } = req.params;
+    const sql = "SELECT * FROM patients WHERE id = ?";
+    db.get(sql, [id], (err, row) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (!row) {
+            return res.status(404).json({ error: 'Paciente no encontrado.' });
+        }
+        res.json({ patient: row });
+    });
+});
+
+// Firmar un informe de paciente
+app.put('/api/patients/:id/sign', [verifyToken], (req, res) => {
+    const { id } = req.params;
+    const sql = 'UPDATE patients SET is_signed = 1 WHERE id = ?';
+    db.run(sql, [id], function(err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Paciente no encontrado.' });
+        }
+        res.status(200).json({ message: 'Informe firmado exitosamente.' });
+    });
+});
+
+
+app.listen(port, () => {
+  console.log(`Servidor escuchando en http://localhost:${port}`);
+});
