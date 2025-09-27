@@ -41,6 +41,95 @@
             border-color: transparent !important;
         } */
     </style>
+
+    <style>
+/* Search Bot */
+#search-bot-fab {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+#search-bot-fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+.search-modal {
+    display: none;
+    position: fixed;
+    z-index: 1001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+    animation: fadeIn 0.3s;
+}
+.search-modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 600px;
+    border-radius: 10px;
+}
+.search-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+.search-modal-close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    background: none;
+}
+#search-modal-input {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+#search-modal-results {
+    margin-top: 20px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+.search-result-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+.search-result-item:hover {
+    background-color: #f0f2f5;
+}
+.search-result-item i {
+    margin-right: 10px;
+    color: var(--primary);
+}
+    </style>
 </head>
 <body>
     <script>
@@ -570,11 +659,8 @@
                                         <input type="text" class="editable-field" id="informe-clinica" value="">
                                     </div>
                                     <div class="data-item">
-                                        <span class="data-label">Med. Solicitante</label>
-                                        <select class="editable-select" id="informe-medico">
-                                            <option value="">Seleccionar médico</option>
-                                            <!-- Los médicos se cargarán dinámicamente -->
-                                        </select>
+                                        <span class="data-label">Med. Solicitante</span>
+                                        <input type="text" class="editable-field" id="informe-medico" list="doctors-options">
                                     </div>
                                     <div class="data-item double-column">
                                         <span class="data-label">Motivo Estudio</span>
@@ -1129,7 +1215,11 @@
                             <td></td>
                             <td><button class="btn-informe btn-modificar" data-id="${patient.id}">Modificar</button></td>
                             <td><button class="delete-btn" data-id="${patient.id}"><i class="fas fa-trash-alt"></i></button></td>
-                            <td>${patient.is_signed ? '<i class="fas fa-file-pdf" style="color: red; font-size: 1.5rem;"></i>' : ''}</td>
+                            <td>
+                                ${patient.pdf_path 
+                                    ? `<a href="/${patient.pdf_path.replace('.\\', '')}" download="${patient.attention_code}.pdf"><i class="fas fa-file-pdf" style="color: red; font-size: 1.5rem;"></i></a>` 
+                                    : (patient.is_signed ? '<i class="fas fa-file-pdf" style="color: grey; font-size: 1.5rem;" title="PDF en proceso"></i>' : '')}
+                            </td>
                         `;
                         if (patient.service_type === 'muestras-quirurgicas') {
                             surgicalTbody.innerHTML += `<tr>${rowHTML}</tr>`;
@@ -1318,6 +1408,121 @@
             setDates();
             loadDoctors();
             loadTemplates();
+
+            // Expose a function for the iframe to call
+            window.refreshTemplates = loadTemplates;
+
+            // --- USER MANAGEMENT LOGIC ---
+            const userRegisterForm = document.getElementById('user-register-form');
+            const registerFeedback = document.getElementById('register-feedback');
+
+            async function loadUsers() {
+                try {
+                    const response = await fetch('http://localhost:3000/api/users', { headers: { 'Authorization': `Bearer ${token}` } });
+                    const data = await response.json();
+                    const userListTbody = document.getElementById('user-list-tbody');
+                    userListTbody.innerHTML = '';
+                    if (response.ok) {
+                        data.users.forEach(user => {
+                            const row = `<tr>
+                                <td>${user.id}</td>
+                                <td>${user.username}</td>
+                                <td>${user.role}</td>
+                                <td>
+                                    ${currentUser.id != user.id ? `<button class="delete-btn user-delete-btn" data-id="${user.id}"><i class="fas fa-trash-alt"></i></button>` : ''}
+                                </td>
+                            </tr>`;
+                            userListTbody.innerHTML += row;
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error loading users:', error);
+                }
+            }
+
+            if (userRegisterForm) {
+                userRegisterForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const username = document.getElementById('new-username').value;
+                    const password = document.getElementById('new-password').value;
+                    const role = document.getElementById('new-role').value;
+
+                    try {
+                        const response = await fetch('http://localhost:3000/api/register', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ username, password, role })
+                        });
+                        const result = await response.json();
+                        registerFeedback.textContent = result.message || result.error;
+                        if (response.ok) {
+                            userRegisterForm.reset();
+                            loadUsers(); // Refresh user list
+                        }
+                    } catch (error) {
+                        registerFeedback.textContent = 'Error de conexión.';
+                    }
+                });
+            }
+
+            document.getElementById('user-list-table').addEventListener('click', async (e) => {
+                const deleteBtn = e.target.closest('.user-delete-btn');
+                if (deleteBtn) {
+                    const id = deleteBtn.dataset.id;
+                    if (confirm(`¿Estás seguro de eliminar al usuario con ID ${id}?`)) {
+                        try {
+                            const response = await fetch(`http://localhost:3000/api/users/${id}`, {
+                                method: 'DELETE',
+                                headers: { 'Authorization': `Bearer ${token}` }
+                            });
+                            const result = await response.json();
+                            alert(result.message || result.error);
+                            if (response.ok) {
+                                loadUsers();
+                            }
+                        } catch (error) {
+                            alert('Error de conexión.');
+                        }
+                    }
+                }
+            });
+
+            document.querySelector('[data-link="gestion-usuarios"]').addEventListener('click', loadUsers);
+
+            // --- EDITOR TOOLBAR LOGIC ---
+            function formatDoc(editorId, command, value = null) {
+                const editor = document.getElementById(editorId);
+                if (editor) {
+                    editor.focus();
+                    document.execCommand(command, false, value);
+                }
+            }
+
+            document.querySelectorAll('.editor-toolbar').forEach(toolbar => {
+                toolbar.addEventListener('click', (e) => {
+                    const button = e.target.closest('.format-btn');
+                    if (button) {
+                        e.preventDefault(); // Prevent any default action
+                        const command = button.dataset.command;
+                        const editor = button.closest('.editor-container, .diagnostico-container').querySelector('.editor-content');
+                        if (command && editor) {
+                            formatDoc(editor.id, command);
+                        }
+                    }
+                });
+
+                toolbar.addEventListener('change', (e) => {
+                    const select = e.target.closest('.format-select');
+                    if (select) {
+                        const command = select.dataset.command;
+                        const editor = select.closest('.editor-container, .diagnostico-container').querySelector('.editor-content');
+                        if (command && editor && select.value) {
+                            formatDoc(editor.id, command, select.value);
+                            select.value = ''; // Reset select
+                        }
+                    }
+                });
+            });
         });
     </script>
 </body>

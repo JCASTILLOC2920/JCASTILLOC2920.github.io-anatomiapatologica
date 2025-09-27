@@ -10,7 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- Dexie.js for IndexedDB wrapper -->
     <script src="https://unpkg.com/dexie@3.2.2/dist/dexie.js"></script>
-    <style>:root{--primary:#1e88e5;--primary-dark:#0d47a1;--secondary:#ff9800;--secondary-dark:#f57c00;--text:#333;--text-light:#666;--bg:#f0f2f5;--sidebar-bg:#2c3e50;--sidebar-hover:#34495e;--card-bg:#fff;--border:#e0e0e0;--success:#4caf50;--error:#e53935;--table-header:#e3f2fd}*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}body{background-color:var(--bg);color:var(--text);display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;padding:20px;font-family:Arial,sans-serif;position:relative}.a4-container{width:21cm;min-height:29.7cm;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.1);padding:1.5cm;box-sizing:border-box;margin-bottom:20px;font-family:Arial,sans-serif;position:relative;display:flex;flex-direction:column}.preliminary-report{padding:0;background:#fff;font-family:Arial,sans-serif;color:#333;line-height:1.6;width:100%;margin:0 auto;flex:1;display:flex;flex-direction:column}.report-header{text-align:center;margin-bottom:20px;padding-bottom:10px}.report-header img{width:100%;max-width:1044px;height:auto;display:block;margin:0 auto}.patient-info{margin-bottom:20px}.patient-info h3{font-size:13pt;font-weight:700;margin-bottom:10px;border-bottom:1px solid #ddd;padding-bottom:5px;text-align:justify;font-family:Arial,sans-serif}.patient-data-table{width:100%;border-collapse:collapse;margin:15px 0;font-family:Arial,sans-serif}.patient-data-table td{padding:4px;border:1px solid #ddd;vertical-align:top;font-size:9pt;line-height:1.2;font-family:Arial,sans-serif}.patient-data-table .codigo-cell{font-size:16pt;font-weight:700;text-align:center;vertical-align:middle;background-color:#f0f7ff;padding:2px 4px;font-family:Arial,sans-serif}.patient-data-table .info-cell{padding:4px;font-family:Arial,sans-serif}.report-section{margin-bottom:20px}.report-section h3{font-size:13pt;font-weight:700;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #ddd;text-align:justify;font-family:Arial,sans-serif}.report-content{padding-left:10px;font-size:10pt;text-align:justify;font-family:Arial,sans-serif}.decorative-line{width:100%;height:auto;margin-bottom:10px}.diagnosis-section{margin-top:20px;padding-top:10px;border-top:1px solid #eee}.diagnosis-title{font-size:13pt;font-weight:700;text-align:center;margin-bottom:10px;font-family:Arial,sans-serif}.report-footer-container{margin-top:auto;padding-top:20px;width:100%}.signature-section{text-align:center;margin-bottom:10px}.signature-image{width:200px;height:auto}.report-footer-line{border-bottom:2px solid #333;margin-bottom:5px}.document-footer{display:flex;justify-content:space-between;font-size:8pt;color:#666}.button-container{position:fixed;top:20px;right:20px;display:flex;flex-direction:column;gap:10px;z-index:1001}.btn-back,.btn-print,.btn-edit{background-color:var(--primary);color:#fff;border:none;border-radius:50%;width:50px;height:50px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.2);transition:all .3s}.btn-back:hover,.btn-print:hover,.btn-edit:hover{background-color:var(--primary-dark);transform:scale(1.1)}#loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,.8);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:1002}#loading-overlay i{font-size:40px;color:var(--primary);margin-bottom:15px}#loading-overlay p{font-size:18px;color:var(--text)}.photos-section{page-break-before:auto}.photos-grid{display:flex;gap:10px;margin-top:10px}.report-photo{max-width:50%;height:auto;border:1px solid #ddd}
+    <style>:root{--primary:#1e88e5;--primary-dark:#0d47a1;--secondary:#ff9800;--secondary-dark:#f57c00;--text:#333;--text-light:#666;--bg:#f0f2f5;--sidebar-bg:#2c3e50;--sidebar-hover:#34495e;--card-bg:#fff;--border:#e0e0e0;--success:#4caf50;--error:#e53935;--table-header:#e3f2fd}*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}body{background-color:var(--bg);color:var(--text);display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;padding:20px;font-family:Arial,sans-serif;position:relative}.a4-container{width:21cm;min-height:29.7cm;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.1);padding:1.5cm;box-sizing:border-box;margin-bottom:20px;font-family:Arial,sans-serif;position:relative;display:flex;flex-direction:column}.preliminary-report{padding:0;background:#fff;font-family:Arial,sans-serif;color:#333;line-height:1.0;width:100%;margin:0 auto;flex:1;display:flex;flex-direction:column}.report-header{text-align:center;margin-bottom:20px;padding-bottom:10px}.report-header img{width:100%;max-width:1044px;height:auto;display:block;margin:0 auto}.patient-info{margin-bottom:20px}.patient-info h3{font-size:13pt;font-weight:700;margin-bottom:10px;border-bottom:1px solid #ddd;padding-bottom:5px;text-align:justify;font-family:Arial,sans-serif}.patient-data-table{width:100%;border-collapse:collapse;margin:15px 0;font-family:Arial,sans-serif}.patient-data-table td{padding:4px;border:1px solid #ddd;vertical-align:top;font-size:9pt;line-height:1.2;font-family:Arial,sans-serif}.patient-data-table .codigo-cell{font-size:16pt;font-weight:700;text-align:center;vertical-align:middle;background-color:#f0f7ff;padding:2px 4px;font-family:Arial,sans-serif}.patient-data-table .info-cell{padding:4px;font-family:Arial,sans-serif}.report-section{margin-bottom:20px}.report-section h3{font-size:10pt;font-weight:700;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #ddd;text-align:left;font-family:Arial,sans-serif}.report-content{font-size:8pt;line-height:1.0}.diagnosis-title{font-size:10pt;font-weight:700;text-align:left;margin-bottom:10px}.report-content{padding-left:10px;font-size:10pt;text-align:justify;font-family:Arial,sans-serif}.decorative-line{width:100%;height:auto;margin-bottom:10px}.diagnosis-section{margin-top:20px;padding-top:10px;border-top:1px solid #eee}.diagnosis-title{font-size:13pt;font-weight:700;text-align:center;margin-bottom:10px;font-family:Arial,sans-serif}.report-footer-container{margin-top:auto;padding-top:20px;width:100%}.signature-section{text-align:center;margin-bottom:10px}.signature-image{width:200px;height:auto}.report-footer-line{border-bottom:2px solid #333;margin-bottom:5px}.document-footer{display:flex;justify-content:space-between;font-size:8pt;color:#666}.button-container{position:fixed;top:20px;right:20px;display:flex;flex-direction:column;gap:10px;z-index:1001}.btn-back,.btn-print,.btn-edit{background-color:var(--primary);color:#fff;border:none;border-radius:50%;width:50px;height:50px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.2);transition:all .3s}.btn-back:hover,.btn-print:hover,.btn-edit:hover{background-color:var(--primary-dark);transform:scale(1.1)}#loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,.8);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:1002}#loading-overlay i{font-size:40px;color:var(--primary);margin-bottom:15px}#loading-overlay p{font-size:18px;color:var(--text)}.photos-section{page-break-before:auto}.photos-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:15px;margin-top:10px}.report-photo{max-width:5cm;height:auto;border:6px solid #ddd;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.08);object-fit:cover;transition:transform .3s ease;margin:auto}
         @media print {
             body {
                 background-color: #fff;
@@ -67,7 +67,7 @@
 
                 document.getElementById('preliminary-report-content').innerHTML = `
                     <div class="report-header">
-                        <img src="/encabezado.png" alt="JC PATH LAB - Encabezado">
+                        <img src="informe-preliminar_files/encabezado.png" alt="JC PATH LAB - Encabezado">
                     </div>
                     
                     <div class="patient-info">
@@ -107,13 +107,13 @@
                     
                     <div class="report-section">
                         <h3>DESCRIPCIÓN MACROSCÓPICA</h3>
-                        <img src="/linea1.png" alt="Línea decorativa" class="decorative-line">
+                        <img src="informe-preliminar_files/linea1.png" alt="Línea decorativa" class="decorative-line">
                         <div class="report-content">${data.macro_description}</div>
                     </div>
                     
                     <div class="report-section">
                         <h3>DESCRIPCIÓN MICROSCÓPICA</h3>
-                        <img src="/linea2.png" alt="Línea decorativa" class="decorative-line">
+                        <img src="informe-preliminar_files/linea2.png" alt="Línea decorativa" class="decorative-line">
                         <div class="report-content">${data.micro_description}</div>
                     </div>
                     
@@ -122,18 +122,19 @@
                         <div class="report-content">${data.diagnosis}</div>
                     </div>
 
+                    ${(data.photo1 || data.photo2) ? `
                     <div class="report-section photos-section">
-                        <h3>FOTOS ADJUNTAS</h3>
                         <div class="photos-grid">
                             ${data.photo1 ? `<img src="${data.photo1}" alt="Foto 1" class="report-photo">` : ''}
                             ${data.photo2 ? `<img src="${data.photo2}" alt="Foto 2" class="report-photo">` : ''}
                         </div>
                     </div>
+                    ` : ''}
                     
                     <!-- Pie de página dentro del A4 -->
                     <div class="report-footer-container">
                         <div class="signature-section">
-                            <img src="/firma.png" alt="Firma del Dr. Joseph Castillo" class="signature-image">
+                            <img src="informe-preliminar_files/firma.png" alt="Firma del Dr. Joseph Castillo" class="signature-image">
                         </div>
                         
                         <div class="report-footer-line"></div>

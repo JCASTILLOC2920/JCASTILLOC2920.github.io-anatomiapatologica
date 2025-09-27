@@ -884,12 +884,6 @@
                     <div class="form-group">
                         <label for="plantilla-especialidad">Especialidad / Categoría</label>
                         <select id="plantilla-especialidad">
-                            <option value="">Seleccionar especialidad</option>
-                            <option value="patologia">Patología</option>
-                            <option value="citologia">Citología</option>
-                            <option value="dermatologia">Dermatología</option>
-                            <option value="ginecologia">Ginecología</option>
-                            <option value="nueva">-- Agregar nueva especialidad --</option>
                         </select>
                     </div>
                     
@@ -1066,6 +1060,7 @@
                     const data = await response.json();
                     plantillasData = data.templates;
                     renderTemplates();
+                    renderSpecialtiesDropdown(); // <-- Add this call
                 } else {
                     console.error('Error fetching templates:', response.statusText);
                     alert('No se pudieron cargar las plantillas desde el servidor.');
@@ -1119,6 +1114,9 @@
                 if (response.ok) {
                     toggleFormularioPlantilla(false);
                     fetchTemplates(); // Refresh list
+                    if (window.parent && window.parent.refreshTemplates) {
+                        window.parent.refreshTemplates();
+                    }
                 }
             } catch (error) {
                 console.error('Error saving template:', error);
@@ -1183,6 +1181,24 @@
             
             // Add event listeners after rendering
             addTableButtonListeners();
+        }
+
+        function renderSpecialtiesDropdown() {
+            const select = document.getElementById('plantilla-especialidad');
+            const currentValue = select.value; // Preserve current selection if possible
+
+            // Get unique specialties from data
+            const specialties = [...new Set(plantillasData.map(p => p.especialidad).filter(Boolean))];
+
+            // Build the new options
+            let optionsHtml = '<option value="">Seleccionar especialidad</option>';
+            specialties.forEach(s => {
+                optionsHtml += `<option value="${s}">${s}</option>`;
+            });
+            optionsHtml += '<option value="nueva">-- Agregar nueva especialidad --</option>';
+
+            select.innerHTML = optionsHtml;
+            select.value = currentValue; // Restore selection
         }
 
         function addTableButtonListeners() {

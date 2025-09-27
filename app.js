@@ -4,10 +4,30 @@ const db = require('./database.js');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { verifyToken, isAdmin } = require('./authMiddleware.js');
+const sharp = require('sharp');
+const puppeteer = require('puppeteer');
+const fs = require('fs');
+
+// Create reports directory if it doesn't exist
+const reportsDir = './reports';
+if (!fs.existsSync(reportsDir)){
+    fs.mkdirSync(reportsDir);
+}
+
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
+app.use(helmet());
 const port = 3000;
 const JWT_SECRET = 'your_jwt_secret_key'; // ¡Cambia esto por una clave secreta más segura!
+
+// Rate limiter for login
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Demasiados intentos de inicio de sesión desde esta IP, por favor intente de nuevo después de 15 minutos'
+});
 
 // Middleware
 app.use(cors());
@@ -22,7 +42,7 @@ app.get('/', (req, res) => {
 // --- RUTAS DE AUTENTICACIÓN ---
 
 // Ruta de login (pública)
-app.post('/api/login', (req, res) => {
+app.post('/api/login', loginLimiter, (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
@@ -58,6 +78,7 @@ app.post('/api/login', (req, res) => {
         });
     });
 });
+
 
 // --- RUTAS DE GESTIÓN DE USUARIOS (protegidas) ---
 
@@ -269,13 +290,41 @@ app.post('/api/patients', [verifyToken], (req, res) => {
 });
 
 // Actualizar un paciente
-app.put('/api/patients/:id', [verifyToken], (req, res) => {
+app.put('/api/patients/:id', [verifyToken], async (req, res) => {
     const { id } = req.params;
-    const {
+    let {
         dni, age, last_name, first_name, phone, gender, contact_family, 
         contact_phone, requesting_doctor, study_reason, clinic, 
         macro_description, micro_description, diagnosis, photo1, photo2
     } = req.body;
+
+    try {
+        // Procesar photo1 si existe
+        if (photo1 && photo1.startsWith('data:image')) {
+            const base64Data = photo1.replace(/^data:image\/\w+;base64,/, '');
+            const buffer = Buffer.from(base64Data, 'base64');
+            const processedImageBuffer = await sharp(buffer)
+                .gamma(1.5) // Ajuste de brillo y contraste
+                .modulate({ saturation: 1.2 }) // Ajuste de saturación
+                .toBuffer();
+            photo1 = `data:image/jpeg;base64,${processedImageBuffer.toString('base64')}`;
+        }
+
+        // Procesar photo2 si existe
+        if (photo2 && photo2.startsWith('data:image')) {
+            const base64Data = photo2.replace(/^data:image\/\w+;base64,/, '');
+            const buffer = Buffer.from(base64Data, 'base64');
+            const processedImageBuffer = await sharp(buffer)
+                .gamma(1.5) // Ajuste de brillo y contraste
+                .modulate({ saturation: 1.2 }) // Ajuste de saturación
+                .toBuffer();
+            photo2 = `data:image/jpeg;base64,${processedImageBuffer.toString('base64')}`;
+        }
+
+    } catch (error) {
+        console.error('Error procesando la imagen:', error);
+        return res.status(500).json({ error: 'Error al procesar la imagen.' });
+    }
 
     const sql = `UPDATE patients SET 
                     dni = ?,
@@ -336,20 +385,216 @@ app.get('/api/patients/:id', [verifyToken], (req, res) => {
 });
 
 // Firmar un informe de paciente
-app.put('/api/patients/:id/sign', [verifyToken], (req, res) => {
+// Firmar un informe de paciente
+
+async function generarInformeHtml(patient) {
+    // 1. Read CSS from informe-preliminar.html
+    const informeHtmlContent = fs.readFileSync('informe-preliminar.html', 'utf8');
+    const styleRegex = /<style>([\s\S]*?)<\/style>/;
+    const cssMatch = styleRegex.exec(informeHtmlContent);
+    const css = cssMatch ? cssMatch[1] : '';
+
+    // 2. Read images and convert to base64
+    const encabezado = fs.readFileSync('./informe-preliminar_files/encabezado.png').toString('base64');
+    const linea1 = fs.readFileSync('./informe-preliminar_files/linea1.png').toString('base64');
+    const linea2 = fs.readFileSync('./informe-preliminar_files/linea2.png').toString('base64');
+    const firma = fs.readFileSync('./informe-preliminar_files/firma.png').toString('base64');
+
+    // 3. Construct HTML
+    const reportHtml = `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Informe</title>
+        <style>${css}</style>
+    </head>
+    <body>
+        <div class="a4-container">
+            <div class="preliminary-report">
+                <div class="report-header">
+                    <img src="data:image/png;base64,${encabezado}" alt="Encabezado">
+                </div>
+                <div class="patient-info">
+                    <h3>DATOS DEL PACIENTE</h3>
+                    <table class="patient-data-table">
+                        <tbody>
+                            <tr>
+                                <td class="info-cell" width="70%">
+                                    <strong>APELLIDOS Y NOMBRES:</strong> ${patient.last_name} ${patient.first_name}
+                                </td>
+                                <td rowspan="2" class="codigo-cell" width="30%">
+                                    ${patient.attention_code}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="info-cell">
+                                    <strong>SEXO:</strong> ${patient.gender}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="info-cell">
+                                    <strong>FECHA RECEPCIÓN:</strong> ${patient.registration_date}
+                                </td>
+                                <td class="info-cell">
+                                    <strong>FECHA INFORME:</strong> ${new Date().toLocaleDateString('es-ES', {day: '2-digit', month: '2-digit', year: 'numeric'})}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="info-cell">
+                                    <strong>MÉDICO:</strong> ${patient.requesting_doctor}
+                                </td>
+                                <td class="info-cell">
+                                    <strong>CLÍNICA:</strong> ${patient.clinic}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="report-section">
+                    <h3>DESCRIPCIÓN MACROSCÓPICA</h3>
+                    <img src="data:image/png;base64,${linea1}" alt="Línea decorativa" class="decorative-line">
+                    <div class="report-content">${patient.macro_description || ''}</div>
+                </div>
+                <div class="report-section">
+                    <h3>DESCRIPCIÓN MICROSCÓPICA</h3>
+                    <img src="data:image/png;base64,${linea2}" alt="Línea decorativa" class="decorative-line">
+                    <div class="report-content">${patient.micro_description || ''}</div>
+                </div>
+                <div class="diagnosis-section">
+                    <div class="diagnosis-title">DIAGNÓSTICO HISTOLÓGICO:</div>
+                    <div class="report-content">${patient.diagnosis || ''}</div>
+                </div>
+                ${(patient.photo1 || patient.photo2) ? `
+                <div class="report-section photos-section">
+                    <div class="photos-grid">
+                        ${patient.photo1 ? `<img src="${patient.photo1}" alt="Foto 1" class="report-photo">` : ''}
+                        ${patient.photo2 ? `<img src="${patient.photo2}" alt="Foto 2" class="report-photo">` : ''}
+                    </div>
+                </div>
+                ` : ''}
+                <div class="report-footer-container">
+                    <div class="signature-section">
+                        <img src="data:image/png;base64,${firma}" alt="Firma" class="signature-image">
+                    </div>
+                    <div class="report-footer-line"></div>
+                    <div class="document-footer">
+                        <div class="footer-left">
+                            ${patient.attention_code} ${patient.last_name} ${patient.first_name}
+                        </div>
+                        <div class="footer-right">
+                            <span>página 1 de 1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+
+    return reportHtml;
+}
+
+app.put('/api/patients/:id/sign', [verifyToken], async (req, res) => {
     const { id } = req.params;
-    const sql = 'UPDATE patients SET is_signed = 1 WHERE id = ?';
-    db.run(sql, [id], function(err) {
-        if (err) {
-            return res.status(500).json({ error: err.message });
+
+    try {
+        // 1. Set is_signed flag
+        await new Promise((resolve, reject) => {
+            const sql = 'UPDATE patients SET is_signed = 1 WHERE id = ?';
+            db.run(sql, [id], function(err) {
+                if (err) return reject(err);
+                if (this.changes === 0) return reject(new Error('Paciente no encontrado.'));
+                resolve();
+            });
+        });
+
+        // 2. Fetch full patient data
+        const patient = await new Promise((resolve, reject) => {
+            const sql = "SELECT * FROM patients WHERE id = ?";
+            db.get(sql, [id], (err, row) => {
+                if (err) return reject(err);
+                resolve(row);
+            });
+        });
+
+        if (!patient) {
+            return res.status(404).json({ error: 'Paciente no encontrado después de firmar.' });
         }
-        if (this.changes === 0) {
-            return res.status(404).json({ error: 'Paciente no encontrado.' });
-        }
-        res.status(200).json({ message: 'Informe firmado exitosamente.' });
-    });
+
+        // 3. Generate HTML
+        const htmlContent = await generarInformeHtml(patient);
+
+        // 4. Generate PDF with Puppeteer
+        const browser = await puppeteer.launch({
+            executablePath: '/usr/bin/chromium-browser',
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
+        const page = await browser.newPage();
+        await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+        const pdfPath = `${reportsDir}/${patient.attention_code}.pdf`;
+        await page.pdf({ path: pdfPath, format: 'A4', printBackground: true });
+        await browser.close();
+
+        // 5. Update patient with PDF path
+        await new Promise((resolve, reject) => {
+            const sql = 'UPDATE patients SET pdf_path = ? WHERE id = ?';
+            db.run(sql, [pdfPath, id], (err) => {
+                if (err) return reject(err);
+                resolve();
+            });
+        });
+
+        res.status(200).json({ 
+            message: 'Informe firmado y PDF generado exitosamente.', 
+            pdfPath: pdfPath 
+        });
+
+    } catch (error) {
+        console.error("Error al firmar y generar PDF:", error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
+
+app.use('/reports', express.static('reports'));
+
+// --- Universal Search ---
+app.get('/api/search', [verifyToken], async (req, res) => {
+    const query = req.query.q;
+
+    if (!query) {
+        return res.json([]);
+    }
+
+    const searchQuery = `%${query}%`;
+
+    try {
+        const searchPatients = new Promise((resolve, reject) => {
+            const sql = "SELECT id, attention_code, last_name, first_name FROM patients WHERE attention_code LIKE ? OR last_name LIKE ?";
+            db.all(sql, [searchQuery, searchQuery], (err, rows) => {
+                if (err) return reject(err);
+                resolve(rows.map(r => ({ ...r, type: 'patient' })));
+            });
+        });
+
+        const searchUsers = new Promise((resolve, reject) => {
+            const sql = "SELECT id, username, role FROM users WHERE username LIKE ?";
+            db.all(sql, [searchQuery], (err, rows) => {
+                if (err) return reject(err);
+                resolve(rows.map(r => ({ ...r, type: 'user' })));
+            });
+        });
+
+        const [patients, users] = await Promise.all([searchPatients, searchUsers]);
+
+        res.json([...patients, ...users]);
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 app.listen(port, () => {
   console.log(`Servidor escuchando en http://localhost:${port}`);

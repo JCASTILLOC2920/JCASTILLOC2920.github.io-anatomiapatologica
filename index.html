@@ -26,8 +26,7 @@
                 <form id="loginForm">
                     <div class="form-group">
                         <i class="fas fa-user input-icon"></i>
-                        <input type="text" class="form-control" id="username" placeholder="Usuario" required list="username-options">
-                        <datalist id="username-options"></datalist>
+                        <input type="text" class="form-control" id="username" placeholder="Usuario" required>
                     </div>
                     <div class="form-group">
                         <i class="fas fa-lock input-icon"></i>
@@ -46,24 +45,11 @@
         document.addEventListener("DOMContentLoaded", function() {
             const loginForm = document.getElementById("loginForm");
             const errorMessage = document.getElementById("errorMessage");
-            const usernameInput = document.getElementById("username");
-            const usernameOptions = document.getElementById("username-options");
-
-            // Cargar usuarios recordados
-            const savedUsernames = JSON.parse(localStorage.getItem('savedUsernames')) || [];
-            savedUsernames.forEach(username => {
-                const option = document.createElement('option');
-                option.value = username;
-                usernameOptions.appendChild(option);
-            });
-            if(savedUsernames.length > 0){
-                usernameInput.value = savedUsernames[savedUsernames.length -1];
-            }
 
             if (loginForm) {
                 loginForm.onsubmit = async (e) => {
                     e.preventDefault();
-                    const username = usernameInput.value;
+                    const username = document.getElementById("username").value;
                     const password = document.getElementById("password").value;
 
                     try {
@@ -78,18 +64,8 @@
                         const data = await response.json();
 
                         if (response.ok) {
-                            // Guardar el token y los datos del usuario en sessionStorage
                             sessionStorage.setItem('token', data.token);
                             sessionStorage.setItem('currentUser', JSON.stringify(data.user));
-
-                            // Guardar usuario en localStorage para autocompletado
-                            let usernames = JSON.parse(localStorage.getItem('savedUsernames')) || [];
-                            if (!usernames.includes(username)) {
-                                usernames.push(username);
-                                localStorage.setItem('savedUsernames', JSON.stringify(usernames));
-                            }
-                            
-                            // Redirigir a la página principal
                             window.location.href = "pagina2.html";
                         } else {
                             errorMessage.textContent = data.error || "Error al iniciar sesión.";

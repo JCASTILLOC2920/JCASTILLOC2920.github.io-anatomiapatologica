@@ -7,6 +7,16 @@ WORKDIR /usr/src/app
 # Copiar los archivos de definición de paquetes e instalar dependencias
 # Se copian por separado para aprovechar el cache de Docker
 COPY package*.json ./
+
+# Install puppeteer dependencies
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
 RUN npm install
 
 # Copiar el resto del código de la aplicación

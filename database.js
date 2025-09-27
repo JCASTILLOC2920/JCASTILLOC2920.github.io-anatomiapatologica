@@ -25,8 +25,6 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
             }
             // Add default users
             const users = [
-                { user: 'admin', pass: 'admin123', role: 'admin' },
-                { user: 'viewer', pass: 'viewer123', role: 'viewer' },
                 { user: 'josehpcastillo', pass: '41457466', role: 'admin' }
             ];
             const selectUserSql = "SELECT * FROM users WHERE username = ?";
@@ -48,6 +46,18 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
                         });
                     }
                 });
+            });
+
+            // Delete old default users if they exist
+            db.run('DELETE FROM users WHERE username = ?', ['admin'], (err) => {
+                if (err) {
+                    console.error("Error deleting admin user: ", err.message);
+                }
+            });
+            db.run('DELETE FROM users WHERE username = ?', ['viewer'], (err) => {
+                if (err) {
+                    console.error("Error deleting viewer user: ", err.message);
+                }
             });
         });
 
@@ -96,7 +106,9 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
             'micro_description TEXT',
             'diagnosis TEXT',
             'photo1 TEXT',
-            'photo2 TEXT'
+            'photo2 TEXT',
+            'pdf_path TEXT',
+            'is_signed INTEGER DEFAULT 0'
         ];
 
         migrations.forEach(migration => {
