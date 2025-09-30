@@ -541,6 +541,15 @@
             .results-table th, .results-table td {
                 padding: 6px 4px;
             }
+
+            .editor-toolbar-large {
+                padding: 8px;
+                gap: 2px;
+            }
+            .editor-toolbar-large button, .format-select {
+                padding: 5px 6px;
+                font-size: 0.8rem;
+            }
             
             .delete-btn {
                 padding: 3px 6px;
@@ -846,8 +855,11 @@
                     <i class="fas fa-plus-circle"></i> Agregar Plantilla
                 </button>
                 
-                <button class="add-template-btn" id="view-template-list-btn" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">
-                    <i class="fas fa-list"></i> Ver lista de plantillas
+                <button class="add-template-btn" id="view-macro-templates-btn" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">
+                    <i class="fas fa-eye"></i> Ver Macroscópicas
+                </button>
+                <button class="add-template-btn" id="view-micro-templates-btn" style="background: linear-gradient(135deg, var(--secondary), var(--secondary-dark));">
+                    <i class="fas fa-eye"></i> Ver Microscópicas
                 </button>
                 
 
@@ -1015,13 +1027,31 @@
                 </div>
             </div>
             
-            <div class="results-container">
-                <table class="results-table" id="plantillas-results-table">
+            <div class="results-container" id="macro-results-container">
+                <h3 style="margin-bottom: 10px;">Plantillas Macroscópicas</h3>
+                <table class="results-table" id="plantillas-macro-results-table">
                     <thead>
                         <tr>
                             <th>Nº</th>
                             <th>ESPECIALIDAD</th>
-                            <th>TIPO DE PLANTILLA</th>
+                            <th>NOMBRE DE PLANTILLA</th>
+                            <th>ACCIONES</th>
+                            <th>ELIMINAR</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Los datos se cargarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="results-container" id="micro-results-container" style="display: none;">
+                <h3 style="margin-bottom: 10px;">Plantillas Microscópicas</h3>
+                <table class="results-table" id="plantillas-micro-results-table">
+                    <thead>
+                        <tr>
+                            <th>Nº</th>
+                            <th>ESPECIALIDAD</th>
                             <th>NOMBRE DE PLANTILLA</th>
                             <th>ACCIONES</th>
                             <th>ELIMINAR</th>
@@ -1145,8 +1175,10 @@
 
         // --- UI Functions ---
         function renderTemplates() {
-            const tabla = document.getElementById('plantillas-results-table').getElementsByTagName('tbody')[0];
-            tabla.innerHTML = '';
+            const macroTabla = document.getElementById('plantillas-macro-results-table').getElementsByTagName('tbody')[0];
+            const microTabla = document.getElementById('plantillas-micro-results-table').getElementsByTagName('tbody')[0];
+            macroTabla.innerHTML = '';
+            microTabla.innerHTML = '';
 
             const terminoBusqueda = document.getElementById('search-nombre-plantilla').value.toLowerCase();
             const plantillasFiltradas = plantillasData.filter(plantilla =>
@@ -1154,30 +1186,54 @@
                 (plantilla.especialidad && plantilla.especialidad.toLowerCase().includes(terminoBusqueda))
             );
 
-            if (plantillasFiltradas.length === 0) {
-                tabla.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px;">No se encontraron plantillas.</td></tr>`;
-                return;
+            const macroPlantillas = plantillasFiltradas.filter(p => p.tipo === 'macroscopia');
+            const microPlantillas = plantillasFiltradas.filter(p => p.tipo === 'microscopia');
+
+            if (macroPlantillas.length === 0) {
+                macroTabla.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px;">No se encontraron plantillas macroscópicas.</td></tr>`;
+            } else {
+                macroPlantillas.forEach((plantilla, index) => {
+                    const fila = macroTabla.insertRow();
+                    fila.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${plantilla.especialidad}</td>
+                        <td>${plantilla.nombre}</td>
+                        <td>
+                            <button class="btn btn-secondary editar-plantilla-btn" data-id="${plantilla.id}" style="background: #ffc107; margin-left: 5px;">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                        </td>
+                        <td>
+                            <button class="delete-btn eliminar-plantilla-btn" data-id="${plantilla.id}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                });
             }
 
-            plantillasFiltradas.forEach((plantilla, index) => {
-                const fila = tabla.insertRow();
-                fila.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${plantilla.especialidad}</td>
-                    <td>${plantilla.tipo === 'macroscopia' ? 'Macroscopía' : 'Microscopía'}</td>
-                    <td>${plantilla.nombre}</td>
-                    <td>
-                        <button class="btn btn-secondary editar-plantilla-btn" data-id="${plantilla.id}" style="background: #ffc107; margin-left: 5px;">
-                            <i class="fas fa-edit"></i> Editar
-                        </button>
-                    </td>
-                    <td>
-                        <button class="delete-btn eliminar-plantilla-btn" data-id="${plantilla.id}">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </td>
-                `;
-            });
+            if (microPlantillas.length === 0) {
+                microTabla.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px;">No se encontraron plantillas microscópicas.</td></tr>`;
+            } else {
+                microPlantillas.forEach((plantilla, index) => {
+                    const fila = microTabla.insertRow();
+                    fila.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${plantilla.especialidad}</td>
+                        <td>${plantilla.nombre}</td>
+                        <td>
+                            <button class="btn btn-secondary editar-plantilla-btn" data-id="${plantilla.id}" style="background: #ffc107; margin-left: 5px;">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                        </td>
+                        <td>
+                            <button class="delete-btn eliminar-plantilla-btn" data-id="${plantilla.id}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                });
+            }
             
             // Add event listeners after rendering
             addTableButtonListeners();
@@ -1230,17 +1286,10 @@
             }
         }
 
-        function formatDoc(command, value = null) {
-            const activeEditor = document.activeElement.classList.contains('editor-content') ? document.activeElement : document.getElementById('plantilla-editor');
-            if (activeEditor) {
-                activeEditor.focus();
-                document.execCommand(command, false, value);
-            }
-        }
-
         function toggleFormularioPlantilla(mostrar, isEdit = false) {
             document.getElementById('template-form').style.display = mostrar ? 'block' : 'none';
-            document.getElementById('plantillas-results-table').style.display = mostrar ? 'none' : 'table';
+            document.getElementById('macro-results-container').style.display = mostrar ? 'none' : 'block';
+            document.getElementById('micro-results-container').style.display = 'none';
             document.getElementById('pagination-plant').style.display = mostrar ? 'none' : 'flex';
 
             if (!mostrar) {
@@ -1279,16 +1328,29 @@
 
             fetchTemplates();
 
-            // Event Listeners
+            // Event Listeners for editor toolbars
             document.querySelectorAll('.format-btn').forEach(button => {
-                button.addEventListener('click', function() { formatDoc(this.getAttribute('data-command')); });
-            });
-            document.querySelectorAll('.format-select').forEach(select => {
-                select.addEventListener('change', function() {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault(); // Prevent loss of selection
                     const command = this.getAttribute('data-command');
-                    if (this.value) {
-                        formatDoc(command, this.value);
-                        this.value = '';
+                    const editor = this.closest('.editor-container').querySelector('.editor-content');
+                    if (editor) {
+                        editor.focus();
+                        document.execCommand(command, false, null);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.format-select').forEach(select => {
+                select.addEventListener('change', function(e) {
+                    e.preventDefault(); // Prevent loss of selection
+                    const command = this.getAttribute('data-command');
+                    const value = this.value;
+                    const editor = this.closest('.editor-container').querySelector('.editor-content');
+                    if (editor && value) {
+                        editor.focus();
+                        document.execCommand(command, false, value);
+                        this.value = ''; // Reset select to avoid re-applying
                     }
                 });
             });
@@ -1297,7 +1359,16 @@
             });
             document.getElementById('plantilla-especialidad').addEventListener('change', toggleNuevaEspecialidad);
             document.getElementById('add-template-btn').addEventListener('click', () => toggleFormularioPlantilla(true, false));
-            document.getElementById('view-template-list-btn').addEventListener('click', () => toggleFormularioPlantilla(false));
+            document.getElementById('view-macro-templates-btn').addEventListener('click', () => {
+                toggleFormularioPlantilla(false);
+                document.getElementById('macro-results-container').style.display = 'block';
+                document.getElementById('micro-results-container').style.display = 'none';
+            });
+            document.getElementById('view-micro-templates-btn').addEventListener('click', () => {
+                toggleFormularioPlantilla(false);
+                document.getElementById('macro-results-container').style.display = 'none';
+                document.getElementById('micro-results-container').style.display = 'block';
+            });
             document.getElementById('cancelar-plantilla-btn').addEventListener('click', () => toggleFormularioPlantilla(false));
             document.getElementById('guardar-plantilla-btn').addEventListener('click', saveTemplate);
             document.getElementById('search-btn-plant').addEventListener('click', renderTemplates);

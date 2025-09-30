@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados - JC PATH LAB</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1e88e5; --primary-dark: #0d47a1; --bg: #f0f2f5;
+            --card-bg: #ffffff; --border: #e0e0e0; --text: #333;
+            --table-header: #e3f2fd;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+        }
+        .topbar {
+            background: var(--primary-dark);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .topbar h1 { margin: 0; font-size: 1.5rem; }
+        #logout-btn {
+            background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .filters {
+            display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;
+        }
+        .filter-group { flex: 1; min-width: 200px; }
+        .filter-group input {
+            width: 100%; padding: 10px; border: 1px solid var(--border);
+            border-radius: 6px; font-size: 1rem;
+        }
+        .results-table {
+            width: 100%; border-collapse: collapse; font-size: 0.9rem;
+        }
+        .results-table th, .results-table td {
+            padding: 12px 15px; border-bottom: 1px solid var(--border); text-align: left;
+        }
+        .results-table th {
+            background-color: var(--table-header); font-weight: 600;
+        }
+        .results-table tr:hover { background-color: #f5f9ff; }
+        .pdf-link i { color: #e53935; font-size: 1.5rem; }
+        .pdf-link.disabled i { color: #9e9e9e; }
+        @media (max-width: 768px) {
+            .filters { flex-direction: column; }
+            .results-container { overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="topbar">
+        <h1>Portal de Resultados</h1>
+        <div class="user-info">
+            <span id="username-display"></span>
+            <button id="logout-btn" title="Cerrar Sesión"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="filters">
+            <div class="filter-group">
+                <input type="text" id="search-input" placeholder="Buscar por nombre, código o clínica...">
+            </div>
+        </div>
+        <div class="results-container">
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Cod. Atención</th>
+                        <th>Apellidos y Nombres</th>
+                        <th>Clínica</th>
+                        <th>Fecha de Registro</th>
+                        <th>Informe PDF</th>
+                    </tr>
+                </thead>
+                <tbody id="results-tbody">
+                    <!-- Los resultados se cargarán aquí -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = sessionStorage.getItem('token');
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+
+            if (!token || !currentUser) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            document.getElementById('username-display').textContent = currentUser.username;
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                sessionStorage.clear();
+                window.location.href = 'index.html';
+            });
+
+            let allPatients = [];
+
+            async function loadPatients() {
+                try {
+                    const response = await fetch('http://localhost:3000/api/patients', { 
+                        headers: { 'Authorization': `Bearer ${token}` } 
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        allPatients = data.patients;
+                        renderTable(allPatients);
+                    } else {
+                        alert('Error al cargar los pacientes.');
+                    }
+                } catch (error) {
+                    console.error('Error de conexión:', error);
+                    alert('No se pudo conectar con el servidor.');
+                }
+            }
+
+            function renderTable(patients) {
+                const tbody = document.getElementById('results-tbody');
+                tbody.innerHTML = '';
+                if (patients.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No se encontraron resultados.</td></tr>';
+                    return;
+                }
+
+                patients.forEach(patient => {
+                    const row = document.createElement('tr');
+                    const pdfLink = patient.pdf_path
+                        ? `<a href="http://localhost:3000/${patient.pdf_path.replace(/\\/g, '/')}" class="pdf-link" target="_blank"><i class="fas fa-file-pdf"></i></a>`
+                        : `<span class="pdf-link disabled"><i class="fas fa-file-pdf"></i></span>`;
+
+                    row.innerHTML = `
+                        <td>${patient.attention_code}</td>
+                        <td>${patient.last_name}, ${patient.first_name}</td>
+                        <td>${patient.clinic || 'N/A'}</td>
+                        <td>${patient.registration_date}</td>
+                        <td style="text-align: center;">${pdfLink}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const filteredPatients = allPatients.filter(p => 
+                    p.last_name.toLowerCase().includes(searchTerm) ||
+                    p.first_name.toLowerCase().includes(searchTerm) ||
+                    p.attention_code.toLowerCase().includes(searchTerm) ||
+                    (p.clinic && p.clinic.toLowerCase().includes(searchTerm))
+                );
+                renderTable(filteredPatients);
+            });
+
+            loadPatients();
+        });
+    </script>
+
+</body>
+</html>

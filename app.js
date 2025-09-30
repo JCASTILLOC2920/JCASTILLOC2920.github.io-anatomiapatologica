@@ -30,7 +30,12 @@ const loginLimiter = rateLimit({
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -572,8 +577,8 @@ app.get('/api/search', [verifyToken], async (req, res) => {
 
     try {
         const searchPatients = new Promise((resolve, reject) => {
-            const sql = "SELECT id, attention_code, last_name, first_name FROM patients WHERE attention_code LIKE ? OR last_name LIKE ?";
-            db.all(sql, [searchQuery, searchQuery], (err, rows) => {
+            const sql = "SELECT id, attention_code, last_name, first_name, clinic FROM patients WHERE attention_code LIKE ? OR last_name LIKE ? OR clinic LIKE ?";
+            db.all(sql, [searchQuery, searchQuery, searchQuery], (err, rows) => {
                 if (err) return reject(err);
                 resolve(rows.map(r => ({ ...r, type: 'patient' })));
             });

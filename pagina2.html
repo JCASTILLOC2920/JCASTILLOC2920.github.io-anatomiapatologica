@@ -1524,6 +1524,92 @@
                 });
             });
         });
+         // --- SEARCH BOT LOGIC ---
+            const fab = document.getElementById('search-bot-fab');
+            const modal = document.getElementById('search-modal');
+            const closeModalBtn = document.getElementById('search-modal-close');
+            const searchInput = document.getElementById('search-modal-input');
+            const searchResults = document.getElementById('search-modal-results');
+
+            fab.addEventListener('click', () => {
+                modal.style.display = 'block';
+                searchInput.value = '';
+                searchResults.innerHTML = '<p>Escriba para buscar...</p>';
+                searchInput.focus();
+            });
+
+            closeModalBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+            let searchTimeout;
+            searchInput.addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(async () => {
+                    const query = searchInput.value;
+                    if (query.length < 2) {
+                        searchResults.innerHTML = '<p>Escriba al menos 2 caracteres...</p>';
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`http://localhost:3000/api/search?q=${query}`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        const results = await response.json();
+                        
+                        searchResults.innerHTML = '';
+                        const patients = results.filter(r => r.type === 'patient');
+                        if (patients.length > 0) {
+                            patients.forEach(patient => {
+                                const item = document.createElement('div');
+                                item.classList.add('search-result-item');
+                                item.dataset.id = patient.id;
+                                item.innerHTML = `
+                                    <i class="fas fa-user-injured"></i>
+                                    <div>
+                                        <strong>${patient.last_name}, ${patient.first_name}</strong><br>
+                                        <small>Clínica: ${patient.clinic || 'N/A'} | Código: ${patient.attention_code}</small>
+                                    </div>
+                                `;
+                                item.addEventListener('click', () => {
+                                    showPatientDetails(patient.id);
+                                    modal.style.display = 'none';
+                                });
+                                searchResults.appendChild(item);
+                            });
+                        } else {
+                            searchResults.innerHTML = '<p>No se encontraron pacientes.</p>';
+                        }
+                    } catch (error) {
+                        console.error('Error en la búsqueda:', error);
+                        searchResults.innerHTML = '<p>Error al realizar la búsqueda.</p>';
+                    }
+                }, 300);
+            });
     </script>
+      <!-- Search Bot FAB -->
+    <div id="search-bot-fab" title="Buscar Paciente">
+        <i class="fas fa-search"></i>
+    </div>
+    <!-- Search Bot Modal -->
+    <div id="search-modal" class="search-modal">
+        <div class="search-modal-content">
+            <div class="search-modal-header">
+                <h2>Buscar Paciente o Clínica</h2>
+                <button class="search-modal-close" id="search-modal-close">&times;</button>
+            </div>
+            <input type="text" id="search-modal-input" placeholder="Escriba un nombre, código o clínica...">
+            <div id="search-modal-results">
+                 <p>Escriba para buscar...</p>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
