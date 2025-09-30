@@ -1083,7 +1083,7 @@
         // --- API Functions ---
         async function fetchTemplates() {
             try {
-                const response = await fetch('http://localhost:3000/api/templates', {
+                const response = await fetch('https://mustafa-lackadaisical-laquita.ngrok-free.dev/api/templates', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (response.ok) {
@@ -1129,8 +1129,8 @@
             const templateData = { nombre, tipo, especialidad, contenido, diagnostico };
 
             const url = currentPlantillaId
-                ? `http://localhost:3000/api/templates/${currentPlantillaId}`
-                : 'http://localhost:3000/api/templates';
+                ? `https://mustafa-lackadaisical-laquita.ngrok-free.dev/api/templates/${currentPlantillaId}`
+                : 'https://mustafa-lackadaisical-laquita.ngrok-free.dev/api/templates';
             const method = currentPlantillaId ? 'PUT' : 'POST';
 
             try {
@@ -1158,7 +1158,7 @@
             if (!confirm('¿Está seguro de que desea eliminar esta plantilla?')) return;
 
             try {
-                const response = await fetch(`http://localhost:3000/api/templates/${id}`, {
+                const response = await fetch(`https://mustafa-lackadaisical-laquita.ngrok-free.dev/api/templates/${id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
