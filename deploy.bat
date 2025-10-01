@@ -8,7 +8,7 @@ set PROJECT_DIR="%~dp0"
 
 REM --- SCRIPT ---
 echo =================================================
-echo      DEPLOYMENT AUTOMATION SCRIPT (v3) - DEBUG
+echo      DEPLOYMENT AUTOMATION SCRIPT (v5) - DEBUG
 echo =================================================
 echo.
 
@@ -78,6 +78,7 @@ echo.
 
 REM 8. Commit and push to GitHub
 echo [8/8] Committing and pushing changes to GitHub...
+git pull --no-edit origin master
 git add .
 git commit -m "Automated URL update to %NEW_NGROK_URL%"
 git push

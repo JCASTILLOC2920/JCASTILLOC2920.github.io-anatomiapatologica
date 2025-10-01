@@ -25,3 +25,13 @@ Thumbs.db
 deploy.bat
 ngrok.exe
 ngrok.zip
+
+# Base de datos - NO SUBIR A GITHUB
+lab.db
+
+# Variables de entorno con información sensible
+.env
+
+# Archivos temporales y logs
+*.log
+*.tmp
