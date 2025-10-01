@@ -2,7 +2,7 @@
 setlocal
 
 REM --- CONFIGURATION ---
-set PROJECT_DIR="c:\Users\josehp\Desktop\informes web"
+set PROJECT_DIR="%~dp0"
 
 REM --- SCRIPT ---
 echo =================================================
