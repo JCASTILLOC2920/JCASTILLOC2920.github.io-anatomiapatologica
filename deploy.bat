@@ -8,7 +8,7 @@ set PROJECT_DIR="%~dp0"
 
 REM --- SCRIPT ---
 echo =================================================
-echo      DEPLOYMENT AUTOMATION SCRIPT (v6) - DEBUG
+echo      DEPLOYMENT AUTOMATION SCRIPT (v7) - DEBUG
 echo =================================================
 echo.
 
@@ -68,7 +68,7 @@ echo.
 
 REM 7. Replace the old URL in HTML files
 echo [7/8] Updating URLs in HTML files...
-set "FILES_TO_UPDATE=index.html pagina2.html plantillas.html resultados.html"
+set "FILES_TO_UPDATE=index.html pagina2.html plantillas.html"
 for %%f in (%FILES_TO_UPDATE%) do (
     echo   - Updating %%f...
     echo     - Running PowerShell to replace URL...
