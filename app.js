@@ -1,518 +1,607 @@
-// =============================================
-// SISTEMA OPTIMIZADO DE GESTIÓN DE USUARIOS
-// =============================================
+const express = require('express');
+const cors = require('cors');
+const db = require('./database.js');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { verifyToken, isAdmin } = require('./authMiddleware.js');
+const sharp = require('sharp');
+const puppeteer = require('puppeteer');
+const fs = require('fs');
+require('dotenv').config();
 
-// Configuración global
-const APP_CONFIG = {
-    STORAGE_KEY: 'lab_users_data',
-    BACKUP_KEY: 'lab_users_backup',
-    SESSION_KEY: 'lab_current_session',
-    VERSION: '2.0.0'
-};
+// Create reports directory if it doesn't exist
+const reportsDir = './reports';
+if (!fs.existsSync(reportsDir)){
+    fs.mkdirSync(reportsDir);
+}
 
-// Clase principal de gestión de usuarios
-class UserManager {
-    constructor() {
-        this.users = new Map();
-        this.currentUser = null;
-        this.isInitialized = false;
-        this.init();
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+
+const app = express();
+app.use(helmet());
+const port = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || 'default_jwt_secret_key';
+
+// Rate limiter for login
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Demasiados intentos de inicio de sesión desde esta IP, por favor intente de nuevo después de 15 minutos'
+});
+
+// Middleware
+app.use(cors({
+  origin: '*',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+}));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Ruta de prueba
+app.get('/', (req, res) => {
+  res.send('¡El servidor backend está funcionando!');
+});
+
+// --- RUTAS DE AUTENTICACIÓN ---
+
+// Ruta de login (pública)
+app.post('/api/login', loginLimiter, (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Faltan campos requeridos (username, password).' });
     }
 
-    // Inicializar el sistema
-    async init() {
-        try {
-            console.log('🚀 Inicializando sistema de usuarios...');
-            
-            // Cargar usuarios desde localStorage
-            await this.loadUsersFromStorage();
-            
-            // Crear usuario admin si no existe
-            await this.ensureAdminUser();
-            
-            // Configurar event listeners
-            this.setupEventListeners();
-            
-            this.isInitialized = true;
-            console.log('✅ Sistema de usuarios inicializado');
-            
-        } catch (error) {
-            console.error('❌ Error inicializando sistema:', error);
-            this.handleError(error);
+    const sql = 'SELECT * FROM users WHERE username = ?';
+    db.get(sql, [username], (err, user) => {
+        if (err) {
+            return res.status(500).json({ error: 'Error en el servidor.' });
         }
-    }
-
-    // Cargar usuarios desde localStorage
-    async loadUsersFromStorage() {
-        try {
-            const storedData = localStorage.getItem(APP_CONFIG.STORAGE_KEY);
-            if (storedData) {
-                const parsedData = JSON.parse(storedData);
-                this.users = new Map(parsedData.users || []);
-                console.log(`📊 Usuarios cargados: ${this.users.size}`);
-            } else {
-                console.log('📝 No hay usuarios almacenados, creando estructura inicial');
-                this.users = new Map();
-            }
-        } catch (error) {
-            console.error('❌ Error cargando usuarios:', error);
-            this.users = new Map();
+        if (!user) {
+            return res.status(401).json({ error: 'Usuario o contraseña incorrectos.' });
         }
-    }
 
-    // Guardar usuarios en localStorage
-    async saveUsersToStorage() {
-        try {
-            const dataToStore = {
-                users: Array.from(this.users.entries()),
-                lastUpdate: new Date().toISOString(),
-                version: APP_CONFIG.VERSION
-            };
-            
-            localStorage.setItem(APP_CONFIG.STORAGE_KEY, JSON.stringify(dataToStore));
-            
-            // Crear respaldo
-            localStorage.setItem(APP_CONFIG.BACKUP_KEY, JSON.stringify(dataToStore));
-            
-            console.log('💾 Usuarios guardados en localStorage');
-        } catch (error) {
-            console.error('❌ Error guardando usuarios:', error);
-            throw error;
+        const passwordIsValid = bcrypt.compareSync(password, user.password);
+        if (!passwordIsValid) {
+            return res.status(401).json({ error: 'Usuario o contraseña incorrectos.' });
         }
-    }
 
-    // Asegurar que existe el usuario administrador
-    async ensureAdminUser() {
-        if (!this.users.has('josehpcastillo')) {
-            console.log('👤 Creando usuario administrador...');
-            
-            const adminUser = {
-                username: 'josehpcastillo',
-                password: '41457466', // En producción usar hash
-                permissions: 'admin',
-                status: 'active',
-                lastLogin: null,
-                createdAt: new Date().toISOString()
-            };
-            
-            this.users.set('josehpcastillo', adminUser);
-            await this.saveUsersToStorage();
-            console.log('✅ Usuario administrador creado');
-        }
-    }
+        const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, {
+            expiresIn: 86400 // 24 horas
+        });
 
-    // Autenticar usuario
-    async authenticateUser(username, password) {
-        try {
-            const user = this.users.get(username);
-            
-            if (!user) {
-                throw new Error('Usuario no encontrado');
-            }
-            
-            if (user.password !== password) {
-                throw new Error('Contraseña incorrecta');
-            }
-            
-            if (user.status !== 'active') {
-                throw new Error('Usuario inactivo');
-            }
-            
-            // Actualizar último acceso
-            user.lastLogin = new Date().toISOString();
-            await this.saveUsersToStorage();
-            
-            // Guardar sesión actual
-            this.currentUser = {
+        res.status(200).json({
+            message: 'Login exitoso',
+            token: token,
+            user: {
+                id: user.id,
                 username: user.username,
-                permissions: user.permissions,
-                loginTime: new Date().toISOString(),
-                sessionId: 'session_' + Date.now()
-            };
-            
-            sessionStorage.setItem(APP_CONFIG.SESSION_KEY, JSON.stringify(this.currentUser));
-            
-            console.log(`🔐 Usuario autenticado: ${username}`);
-            return this.currentUser;
-            
-        } catch (error) {
-            console.error('❌ Error de autenticación:', error);
-            throw error;
-        }
-    }
-
-    // Crear nuevo usuario
-    async createUser(username, password) {
-        try {
-            // Validaciones
-            if (this.users.has(username)) {
-                throw new Error('El usuario ya existe');
+                role: user.role
             }
-            
-            if (username.length < 3) {
-                throw new Error('El nombre de usuario debe tener al menos 3 caracteres');
-            }
-            
-            if (password.length < 6) {
-                throw new Error('La contraseña debe tener al menos 6 caracteres');
-            }
-            
-            // Crear usuario con permisos de solo lectura
-            const newUser = {
-                username: username,
-                password: password,
-                permissions: 'lectura',
-                status: 'active',
-                lastLogin: null,
-                createdAt: new Date().toISOString()
-            };
-            
-            this.users.set(username, newUser);
-            await this.saveUsersToStorage();
-            
-            console.log(`✅ Usuario creado: ${username}`);
-            return newUser;
-            
-        } catch (error) {
-            console.error('❌ Error creando usuario:', error);
-            throw error;
-        }
-    }
-
-    // Eliminar usuario
-    async deleteUser(username) {
-        try {
-            if (username === 'josehpcastillo') {
-                throw new Error('No se puede eliminar el usuario administrador');
-            }
-            
-            if (!this.users.has(username)) {
-                throw new Error('Usuario no encontrado');
-            }
-            
-            this.users.delete(username);
-            await this.saveUsersToStorage();
-            
-            console.log(`✅ Usuario eliminado: ${username}`);
-            return true;
-            
-        } catch (error) {
-            console.error('❌ Error eliminando usuario:', error);
-            throw error;
-        }
-    }
-
-    // Obtener lista de usuarios
-    getUsersList() {
-        return Array.from(this.users.values()).map(user => ({
-            username: user.username,
-            permissions: user.permissions,
-            status: user.status,
-            lastLogin: user.lastLogin,
-            createdAt: user.createdAt
-        }));
-    }
-
-    // Cerrar sesión
-    logout() {
-        this.currentUser = null;
-        sessionStorage.removeItem(APP_CONFIG.SESSION_KEY);
-        console.log('🔓 Sesión cerrada');
-    }
-
-    // Verificar si hay sesión activa
-    hasActiveSession() {
-        const session = sessionStorage.getItem(APP_CONFIG.SESSION_KEY);
-        if (session) {
-            try {
-                this.currentUser = JSON.parse(session);
-                return true;
-            } catch (error) {
-                sessionStorage.removeItem(APP_CONFIG.SESSION_KEY);
-                return false;
-            }
-        }
-        return false;
-    }
-
-    // Configurar event listeners
-    setupEventListeners() {
-        // Toggle de contraseña
-        const togglePassword = document.getElementById('togglePassword');
-        const passwordInput = document.getElementById('password');
-        
-        if (togglePassword && passwordInput) {
-            togglePassword.addEventListener('click', (e) => {
-                e.preventDefault();
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-                togglePassword.classList.toggle('fa-eye');
-                togglePassword.classList.toggle('fa-eye-slash');
-            });
-        }
-
-        // Formulario de login
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.addEventListener('submit', this.handleLogin.bind(this));
-        }
-
-        // Botones del panel de administración
-        this.setupAdminButtons();
-    }
-
-    // Manejar login
-    async handleLogin(e) {
-        e.preventDefault();
-        
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        
-        try {
-            const user = await this.authenticateUser(username, password);
-            
-            // Ocultar login y mostrar panel de administración
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('adminPanel').style.display = 'flex';
-            
-            // Cargar lista de usuarios
-            this.loadUserList();
-            
-        } catch (error) {
-            this.showError(error.message);
-        }
-    }
-
-    // Configurar botones del panel de administración
-    setupAdminButtons() {
-        // Botón para proseguir
-        const proceedBtn = document.getElementById('proceedBtn');
-        if (proceedBtn) {
-            proceedBtn.addEventListener('click', () => {
-                window.location.href = "pagina2.html";
-            });
-        }
-
-        // Botón para crear usuario
-        const createUserBtn = document.getElementById('createUserBtn');
-        if (createUserBtn) {
-            createUserBtn.addEventListener('click', this.handleCreateUser.bind(this));
-        }
-
-        // Botón para cerrar sesión
-        const logoutBtn = document.getElementById('logoutAdminBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', this.handleLogout.bind(this));
-        }
-
-        // Controles de paginación
-        this.setupPagination();
-    }
-
-    // Manejar creación de usuario
-    async handleCreateUser() {
-        try {
-            const username = prompt('Ingrese el nombre de usuario (mínimo 3 caracteres):');
-            if (!username) return;
-            
-            const password = prompt('Ingrese la contraseña (mínimo 6 caracteres):');
-            if (!password) return;
-            
-            await this.createUser(username, password);
-            
-            // Recargar lista de usuarios
-            this.loadUserList();
-            
-            alert(`✅ Usuario "${username}" creado exitosamente\n\nPermisos: Solo Lectura\nEstado: Activo`);
-            
-        } catch (error) {
-            alert(`❌ Error: ${error.message}`);
-        }
-    }
-
-    // Manejar logout
-    handleLogout() {
-        this.logout();
-        
-        // Mostrar login y ocultar panel de administración
-        document.getElementById('adminPanel').style.display = 'none';
-        document.getElementById('loginContainer').style.display = 'flex';
-        
-        // Limpiar formulario
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
-        this.clearError();
-    }
-
-    // Cargar lista de usuarios en la tabla
-    loadUserList() {
-        const userList = document.getElementById('userList');
-        if (!userList) return;
-        
-        userList.innerHTML = '';
-        
-        const users = this.getUsersList();
-        
-        users.forEach(user => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>
-                    <span class="user-status status-${user.status}"></span>
-                    ${user.username}
-                </td>
-                <td>${user.permissions}</td>
-                <td class="last-login">${user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Nunca'}</td>
-                <td class="action-cell">
-                    ${user.username !== 'josehpcastillo' ? 
-                        `<button class="delete-btn" data-user="${user.username}">
-                            <i class="fas fa-trash-alt"></i> Eliminar
-                        </button>` : 
-                        '<span class="admin-badge">Administrador</span>'
-                    }
-                </td>
-            `;
-            userList.appendChild(tr);
         });
-        
-        // Agregar event listeners a los botones de eliminar
-        this.setupDeleteButtons();
-    }
-
-    // Configurar botones de eliminar
-    setupDeleteButtons() {
-        document.querySelectorAll('.delete-btn').forEach(button => {
-            button.addEventListener('click', async (e) => {
-                const username = e.target.closest('.delete-btn').getAttribute('data-user');
-                
-                if (confirm(`¿Está seguro de eliminar al usuario "${username}"?`)) {
-                    try {
-                        await this.deleteUser(username);
-                        this.loadUserList();
-                        alert(`✅ Usuario "${username}" eliminado correctamente`);
-                    } catch (error) {
-                        alert(`❌ Error: ${error.message}`);
-                    }
-                }
-            });
-        });
-    }
-
-    // Configurar paginación
-    setupPagination() {
-        const prevBtn = document.getElementById('prevPageBtn');
-        const nextBtn = document.getElementById('nextPageBtn');
-        
-        if (prevBtn) {
-            prevBtn.addEventListener('click', () => {
-                // Implementar paginación si es necesario
-                console.log('Página anterior');
-            });
-        }
-        
-        if (nextBtn) {
-            nextBtn.addEventListener('click', () => {
-                // Implementar paginación si es necesario
-                console.log('Página siguiente');
-            });
-        }
-    }
-
-    // Mostrar error
-    showError(message) {
-        const errorMessage = document.getElementById('errorMessage');
-        if (errorMessage) {
-            errorMessage.textContent = message;
-            document.getElementById('loginForm').classList.add('error-animation');
-            setTimeout(() => {
-                document.getElementById('loginForm').classList.remove('error-animation');
-            }, 500);
-        }
-    }
-
-    // Limpiar error
-    clearError() {
-        const errorMessage = document.getElementById('errorMessage');
-        if (errorMessage) {
-            errorMessage.textContent = '';
-        }
-    }
-
-    // Manejar errores generales
-    handleError(error) {
-        console.error('Error del sistema:', error);
-        alert(`Error del sistema: ${error.message}`);
-    }
-}
-
-// =============================================
-// INICIALIZACIÓN DE LA APLICACIÓN
-// =============================================
-
-let userManager;
-
-// Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Iniciando aplicación...');
-    userManager = new UserManager();
-});
-
-// Inicializar cuando la página esté completamente cargada
-window.addEventListener('load', function() {
-    console.log('📱 Inicializando funcionalidades móviles...');
-    
-    // Verificar si hay sesión activa
-    if (userManager && userManager.hasActiveSession()) {
-        console.log('🔐 Sesión activa detectada');
-        // Aquí podrías redirigir automáticamente si es necesario
-    }
-});
-
-// =============================================
-// FUNCIONALIDADES MÓVILES OPTIMIZADAS
-// =============================================
-
-// Detectar dispositivo móvil
-function detectMobileDevice() {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    
-    if (isMobile || isTouch) {
-        document.body.classList.add('mobile-device');
-        
-        // Prevenir zoom en inputs en iOS
-        const inputs = document.querySelectorAll('input[type="text"], input[type="password"]');
-        inputs.forEach(input => {
-            input.addEventListener('focus', function() {
-                this.style.fontSize = '16px';
-            });
-        });
-    }
-}
-
-// Optimizar formularios para móvil
-function optimizeMobileForms() {
-    const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-        const usernameInput = form.querySelector('input[type="text"]');
-        if (usernameInput) {
-            usernameInput.setAttribute('autocomplete', 'username');
-            usernameInput.setAttribute('autocapitalize', 'none');
-            usernameInput.setAttribute('autocorrect', 'off');
-        }
-        
-        const passwordInput = form.querySelector('input[type="password"]');
-        if (passwordInput) {
-            passwordInput.setAttribute('autocomplete', 'current-password');
-        }
     });
+});
+
+
+// --- RUTAS DE GESTIÓN DE USUARIOS (protegidas) ---
+
+// Registrar un nuevo usuario (solo admin)
+app.post('/api/register', [verifyToken, isAdmin], (req, res) => {
+    const { username, password, role } = req.body;
+
+    if (!username || !password || !role) {
+        return res.status(400).json({ error: 'Faltan campos requeridos (username, password, role).' });
+    }
+    if (role !== 'admin' && role !== 'viewer') {
+        return res.status(400).json({ error: 'El rol debe ser \'admin\' o \'viewer\'.' });
+    }
+
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(password, salt);
+
+    const sql = 'INSERT INTO users (username, password, role) VALUES (?,?,?)';
+    db.run(sql, [username, hashedPassword, role], function(err) {
+        if (err) {
+            return res.status(400).json({ error: 'El nombre de usuario ya existe.' });
+        }
+        res.status(201).json({ message: 'Usuario creado exitosamente.', userId: this.lastID });
+    });
+});
+
+// Obtener todos los usuarios (solo admin)
+app.get('/api/users', [verifyToken, isAdmin], (req, res) => {
+    const sql = "SELECT id, username, role FROM users";
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        res.json({ users: rows });
+    });
+});
+
+// Eliminar un usuario (solo admin)
+app.delete('/api/users/:id', [verifyToken, isAdmin], (req, res) => {
+    const { id } = req.params;
+    // Prevenir que el admin se elimine a sí mismo
+    if (req.user.id == id) {
+        return res.status(400).json({ error: 'No puedes eliminar tu propia cuenta de administrador.' });
+    }
+
+    const sql = 'DELETE FROM users WHERE id = ?';
+    db.run(sql, id, function(err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Usuario no encontrado.' });
+        }
+        res.status(200).json({ message: 'Usuario eliminado exitosamente.' });
+    });
+});
+
+// --- RUTAS DE GESTIÓN DE MÉDICOS (protegidas) ---
+
+// Obtener todos los médicos
+app.get('/api/doctors', [verifyToken], (req, res) => {
+    const sql = "SELECT * FROM doctors";
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ doctors: rows });
+    });
+});
+
+// Crear un nuevo médico (solo admin)
+app.post('/api/doctors', [verifyToken, isAdmin], (req, res) => {
+    const { nombreCompleto, especialidad, clinica } = req.body;
+    if (!nombreCompleto) {
+        return res.status(400).json({ error: 'El campo nombreCompleto es requerido.' });
+    }
+    const sql = 'INSERT INTO doctors (nombreCompleto, especialidad, clinica) VALUES (?,?,?)';
+    db.run(sql, [nombreCompleto, especialidad, clinica], function(err) {
+        if (err) {
+            return res.status(400).json({ error: err.message });
+        }
+        res.status(201).json({ message: 'Médico creado exitosamente.', doctorId: this.lastID });
+    });
+});
+
+// Actualizar un médico (solo admin)
+app.put('/api/doctors/:id', [verifyToken, isAdmin], (req, res) => {
+    const { id } = req.params;
+    const { nombreCompleto, especialidad, clinica } = req.body;
+    if (!nombreCompleto) {
+        return res.status(400).json({ error: 'El campo nombreCompleto es requerido.' });
+    }
+    const sql = 'UPDATE doctors SET nombreCompleto = ?, especialidad = ?, clinica = ? WHERE id = ?';
+    db.run(sql, [nombreCompleto, especialidad, clinica, id], function(err) {
+        if (err) {
+            return res.status(400).json({ error: err.message });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Médico no encontrado.' });
+        }
+        res.status(200).json({ message: 'Médico actualizado exitosamente.' });
+    });
+});
+
+// Eliminar un médico (solo admin)
+app.delete('/api/doctors/:id', [verifyToken, isAdmin], (req, res) => {
+    const { id } = req.params;
+    const sql = 'DELETE FROM doctors WHERE id = ?';
+    db.run(sql, id, function(err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Médico no encontrado.' });
+        }
+        res.status(200).json({ message: 'Médico eliminado exitosamente.' });
+    });
+});
+
+// --- RUTAS DE GESTIÓN DE PLANTILLAS (protegidas) ---
+
+// Obtener todas las plantillas
+app.get('/api/templates', [verifyToken], (req, res) => {
+    const sql = "SELECT * FROM templates";
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ templates: rows });
+    });
+});
+
+// Crear una nueva plantilla (solo admin)
+app.post('/api/templates', [verifyToken, isAdmin], (req, res) => {
+    const { nombre, tipo, especialidad, contenido, diagnostico } = req.body;
+    if (!nombre || !tipo) {
+        return res.status(400).json({ error: 'Los campos nombre y tipo son requeridos.' });
+    }
+    const sql = 'INSERT INTO templates (nombre, tipo, especialidad, contenido, diagnostico) VALUES (?,?,?,?,?)';
+    db.run(sql, [nombre, tipo, especialidad, contenido, diagnostico], function(err) {
+        if (err) {
+            return res.status(400).json({ error: err.message });
+        }
+        res.status(201).json({ message: 'Plantilla creada exitosamente.', templateId: this.lastID });
+    });
+});
+
+// Actualizar una plantilla (solo admin)
+app.put('/api/templates/:id', [verifyToken, isAdmin], (req, res) => {
+    const { id } = req.params;
+    const { nombre, tipo, especialidad, contenido, diagnostico } = req.body;
+    if (!nombre || !tipo) {
+        return res.status(400).json({ error: 'Los campos nombre y tipo son requeridos.' });
+    }
+    const sql = 'UPDATE templates SET nombre = ?, tipo = ?, especialidad = ?, contenido = ?, diagnostico = ? WHERE id = ?';
+    db.run(sql, [nombre, tipo, especialidad, contenido, diagnostico, id], function(err) {
+        if (err) {
+            return res.status(400).json({ error: err.message });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Plantilla no encontrada.' });
+        }
+        res.status(200).json({ message: 'Plantilla actualizada exitosamente.' });
+    });
+});
+
+// Eliminar una plantilla (solo admin)
+app.delete('/api/templates/:id', [verifyToken, isAdmin], (req, res) => {
+    const { id } = req.params;
+    const sql = 'DELETE FROM templates WHERE id = ?';
+    db.run(sql, id, function(err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Plantilla no encontrada.' });
+        }
+        res.status(200).json({ message: 'Plantilla eliminada exitosamente.' });
+    });
+});
+
+// --- RUTAS DE GESTIÓN DE PACIENTES (protegidas) ---
+
+// Registrar un nuevo paciente
+app.post('/api/patients', [verifyToken], (req, res) => {
+    const {
+        service_type, attention_code, dni, age, last_name, first_name, phone, 
+        gender, contact_family, contact_phone, requesting_doctor, study_reason, 
+        clinic, registration_date, delivery_date
+    } = req.body;
+
+    if (!attention_code || !last_name || !first_name) {
+        return res.status(400).json({ error: 'Los campos Cod. Atención, Apellidos y Nombres son requeridos.' });
+    }
+
+    const sql = `INSERT INTO patients (service_type, attention_code, dni, age, last_name, first_name, phone, gender, contact_family, contact_phone, requesting_doctor, study_reason, clinic, registration_date, delivery_date) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+    const params = [service_type, attention_code, dni, age, last_name, first_name, phone, gender, contact_family, contact_phone, requesting_doctor, study_reason, clinic, registration_date, delivery_date];
+
+    db.run(sql, params, function(err) {
+        if (err) {
+            if (err.message.includes('UNIQUE constraint failed')) {
+                return res.status(400).json({ error: 'El código de atención ya existe.' });
+            }
+            return res.status(500).json({ error: err.message });
+        }
+        res.status(201).json({ message: 'Paciente registrado exitosamente.', patientId: this.lastID });
+    });
+});
+
+// Actualizar un paciente
+app.put('/api/patients/:id', [verifyToken], async (req, res) => {
+    const { id } = req.params;
+    let {
+        dni, age, last_name, first_name, phone, gender, contact_family, 
+        contact_phone, requesting_doctor, study_reason, clinic, 
+        macro_description, micro_description, diagnosis, photo1, photo2
+    } = req.body;
+
+    try {
+        // Procesar photo1 si existe
+        if (photo1 && photo1.startsWith('data:image')) {
+            const base64Data = photo1.replace(/^data:image\/\w+;base64,/, '');
+            const buffer = Buffer.from(base64Data, 'base64');
+            const processedImageBuffer = await sharp(buffer)
+                .gamma(1.5) // Ajuste de brillo y contraste
+                .modulate({ saturation: 1.2 }) // Ajuste de saturación
+                .toBuffer();
+            photo1 = `data:image/jpeg;base64,${processedImageBuffer.toString('base64')}`;
+        }
+
+        // Procesar photo2 si existe
+        if (photo2 && photo2.startsWith('data:image')) {
+            const base64Data = photo2.replace(/^data:image\/\w+;base64,/, '');
+            const buffer = Buffer.from(base64Data, 'base64');
+            const processedImageBuffer = await sharp(buffer)
+                .gamma(1.5) // Ajuste de brillo y contraste
+                .modulate({ saturation: 1.2 }) // Ajuste de saturación
+                .toBuffer();
+            photo2 = `data:image/jpeg;base64,${processedImageBuffer.toString('base64')}`;
+        }
+
+    } catch (error) {
+        console.error('Error procesando la imagen:', error);
+        return res.status(500).json({ error: 'Error al procesar la imagen.' });
+    }
+
+    const sql = `UPDATE patients SET 
+                    dni = ?,
+                    age = ?,
+                    last_name = ?,
+                    first_name = ?,
+                    phone = ?,
+                    gender = ?,
+                    contact_family = ?,
+                    contact_phone = ?,
+                    requesting_doctor = ?,
+                    study_reason = ?,
+                    clinic = ?,
+                    macro_description = ?,
+                    micro_description = ?,
+                    diagnosis = ?,
+                    photo1 = ?,
+                    photo2 = ?
+                 WHERE id = ?`;
+
+    const params = [dni, age, last_name, first_name, phone, gender, contact_family, contact_phone, requesting_doctor, study_reason, clinic, macro_description, micro_description, diagnosis, photo1, photo2, id];
+
+    db.run(sql, params, function(err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Paciente no encontrado.' });
+        }
+        res.status(200).json({ message: 'Informe guardado exitosamente.' });
+    });
+});
+
+// Obtener todos los pacientes
+app.get('/api/patients', [verifyToken], (req, res) => {
+    const sql = "SELECT * FROM patients ORDER BY id DESC";
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ patients: rows });
+    });
+});
+
+// Obtener un paciente por ID
+app.get('/api/patients/:id', [verifyToken], (req, res) => {
+    const { id } = req.params;
+    const sql = "SELECT * FROM patients WHERE id = ?";
+    db.get(sql, [id], (err, row) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (!row) {
+            return res.status(404).json({ error: 'Paciente no encontrado.' });
+        }
+        res.json({ patient: row });
+    });
+});
+
+// Firmar un informe de paciente
+// Firmar un informe de paciente
+
+async function generarInformeHtml(patient) {
+    // 1. Read CSS from informe-preliminar.html
+    const informeHtmlContent = fs.readFileSync('informe-preliminar.html', 'utf8');
+    const styleRegex = /<style>([\s\S]*?)<\/style>/;
+    const cssMatch = styleRegex.exec(informeHtmlContent);
+    const css = cssMatch ? cssMatch[1] : '';
+
+    // 2. Read images and convert to base64
+    const encabezado = fs.readFileSync('./informe-preliminar_files/encabezado.png').toString('base64');
+    const linea1 = fs.readFileSync('./informe-preliminar_files/linea1.png').toString('base64');
+    const linea2 = fs.readFileSync('./informe-preliminar_files/linea2.png').toString('base64');
+    const firma = fs.readFileSync('./informe-preliminar_files/firma.png').toString('base64');
+
+    // 3. Construct HTML
+    const reportHtml = `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Informe</title>
+        <style>${css}</style>
+    </head>
+    <body>
+        <div class="a4-container">
+            <div class="preliminary-report">
+                <div class="report-header">
+                    <img src="data:image/png;base64,${encabezado}" alt="Encabezado">
+                </div>
+                <div class="patient-info">
+                    <h3>DATOS DEL PACIENTE</h3>
+                    <table class="patient-data-table">
+                        <tbody>
+                            <tr>
+                                <td class="info-cell" width="70%">
+                                    <strong>APELLIDOS Y NOMBRES:</strong> ${patient.last_name} ${patient.first_name}
+                                </td>
+                                <td rowspan="2" class="codigo-cell" width="30%">
+                                    ${patient.attention_code}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="info-cell">
+                                    <strong>SEXO:</strong> ${patient.gender}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="info-cell">
+                                    <strong>FECHA RECEPCIÓN:</strong> ${patient.registration_date}
+                                </td>
+                                <td class="info-cell">
+                                    <strong>FECHA INFORME:</strong> ${new Date().toLocaleDateString('es-ES', {day: '2-digit', month: '2-digit', year: 'numeric'})}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="info-cell">
+                                    <strong>MÉDICO:</strong> ${patient.requesting_doctor}
+                                </td>
+                                <td class="info-cell">
+                                    <strong>CLÍNICA:</strong> ${patient.clinic}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="report-section">
+                    <h3>DESCRIPCIÓN MACROSCÓPICA</h3>
+                    <img src="data:image/png;base64,${linea1}" alt="Línea decorativa" class="decorative-line">
+                    <div class="report-content">${patient.macro_description || ''}</div>
+                </div>
+                <div class="report-section">
+                    <h3>DESCRIPCIÓN MICROSCÓPICA</h3>
+                    <img src="data:image/png;base64,${linea2}" alt="Línea decorativa" class="decorative-line">
+                    <div class="report-content">${patient.micro_description || ''}</div>
+                </div>
+                <div class="diagnosis-section">
+                    <div class="diagnosis-title">DIAGNÓSTICO HISTOLÓGICO:</div>
+                    <div class="report-content">${patient.diagnosis || ''}</div>
+                </div>
+                ${(patient.photo1 || patient.photo2) ? `
+                <div class="report-section photos-section">
+                    <div class="photos-grid">
+                        ${patient.photo1 ? `<img src="${patient.photo1}" alt="Foto 1" class="report-photo">` : ''}
+                        ${patient.photo2 ? `<img src="${patient.photo2}" alt="Foto 2" class="report-photo">` : ''}
+                    </div>
+                </div>
+                ` : ''}
+                <div class="report-footer-container">
+                    <div class="signature-section">
+                        <img src="data:image/png;base64,${firma}" alt="Firma" class="signature-image">
+                    </div>
+                    <div class="report-footer-line"></div>
+                    <div class="document-footer">
+                        <div class="footer-left">
+                            ${patient.attention_code} ${patient.last_name} ${patient.first_name}
+                        </div>
+                        <div class="footer-right">
+                            <span>página 1 de 1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+
+    return reportHtml;
 }
 
-// Inicializar funcionalidades móviles
-function initializeMobileFeatures() {
-    detectMobileDevice();
-    optimizeMobileForms();
-}
+app.put('/api/patients/:id/sign', [verifyToken], async (req, res) => {
+    const { id } = req.params;
 
-// Ejecutar optimizaciones móviles
-initializeMobileFeatures();
+    try {
+        // 1. Set is_signed flag
+        await new Promise((resolve, reject) => {
+            const sql = 'UPDATE patients SET is_signed = 1 WHERE id = ?';
+            db.run(sql, [id], function(err) {
+                if (err) return reject(err);
+                if (this.changes === 0) return reject(new Error('Paciente no encontrado.'));
+                resolve();
+            });
+        });
 
+        // 2. Fetch full patient data
+        const patient = await new Promise((resolve, reject) => {
+            const sql = "SELECT * FROM patients WHERE id = ?";
+            db.get(sql, [id], (err, row) => {
+                if (err) return reject(err);
+                resolve(row);
+            });
+        });
+
+        if (!patient) {
+            return res.status(404).json({ error: 'Paciente no encontrado después de firmar.' });
+        }
+
+        // 3. Generate HTML
+        const htmlContent = await generarInformeHtml(patient);
+
+        // 4. Generate PDF with Puppeteer
+        const browser = await puppeteer.launch({
+            executablePath: '/usr/bin/chromium-browser',
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
+        const page = await browser.newPage();
+        await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+        const pdfPath = `${reportsDir}/${patient.attention_code}.pdf`;
+        await page.pdf({ path: pdfPath, format: 'A4', printBackground: true });
+        await browser.close();
+
+        // 5. Update patient with PDF path
+        await new Promise((resolve, reject) => {
+            const sql = 'UPDATE patients SET pdf_path = ? WHERE id = ?';
+            db.run(sql, [pdfPath, id], (err) => {
+                if (err) return reject(err);
+                resolve();
+            });
+        });
+
+        res.status(200).json({ 
+            message: 'Informe firmado y PDF generado exitosamente.', 
+            pdfPath: pdfPath 
+        });
+
+    } catch (error) {
+        console.error("Error al firmar y generar PDF:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+app.use('/reports', express.static('reports'));
+
+// --- Universal Search ---
+app.get('/api/search', [verifyToken], async (req, res) => {
+    const query = req.query.q;
+
+    if (!query) {
+        return res.json([]);
+    }
+
+    const searchQuery = `%${query}%`;
+
+    try {
+        const searchPatients = new Promise((resolve, reject) => {
+            const sql = "SELECT id, attention_code, last_name, first_name, clinic FROM patients WHERE attention_code LIKE ? OR last_name LIKE ? OR clinic LIKE ?";
+            db.all(sql, [searchQuery, searchQuery, searchQuery], (err, rows) => {
+                if (err) return reject(err);
+                resolve(rows.map(r => ({ ...r, type: 'patient' })));
+            });
+        });
+
+        const searchUsers = new Promise((resolve, reject) => {
+            const sql = "SELECT id, username, role FROM users WHERE username LIKE ?";
+            db.all(sql, [searchQuery], (err, rows) => {
+                if (err) return reject(err);
+                resolve(rows.map(r => ({ ...r, type: 'user' })));
+            });
+        });
+
+        const [patients, users] = await Promise.all([searchPatients, searchUsers]);
+
+        res.json([...patients, ...users]);
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.listen(port, () => {
+  console.log(`Servidor escuchando en http://localhost:${port}`);
+});

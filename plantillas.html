@@ -541,6 +541,15 @@
             .results-table th, .results-table td {
                 padding: 6px 4px;
             }
+
+            .editor-toolbar-large {
+                padding: 8px;
+                gap: 2px;
+            }
+            .editor-toolbar-large button, .format-select {
+                padding: 5px 6px;
+                font-size: 0.8rem;
+            }
             
             .delete-btn {
                 padding: 3px 6px;
@@ -846,8 +855,11 @@
                     <i class="fas fa-plus-circle"></i> Agregar Plantilla
                 </button>
                 
-                <button class="add-template-btn" id="view-template-list-btn" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">
-                    <i class="fas fa-list"></i> Ver lista de plantillas
+                <button class="add-template-btn" id="view-macro-templates-btn" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">
+                    <i class="fas fa-eye"></i> Ver Macroscópicas
+                </button>
+                <button class="add-template-btn" id="view-micro-templates-btn" style="background: linear-gradient(135deg, var(--secondary), var(--secondary-dark));">
+                    <i class="fas fa-eye"></i> Ver Microscópicas
                 </button>
                 
 
@@ -884,12 +896,6 @@
                     <div class="form-group">
                         <label for="plantilla-especialidad">Especialidad / Categoría</label>
                         <select id="plantilla-especialidad">
-                            <option value="">Seleccionar especialidad</option>
-                            <option value="patologia">Patología</option>
-                            <option value="citologia">Citología</option>
-                            <option value="dermatologia">Dermatología</option>
-                            <option value="ginecologia">Ginecología</option>
-                            <option value="nueva">-- Agregar nueva especialidad --</option>
                         </select>
                     </div>
                     
@@ -1021,13 +1027,31 @@
                 </div>
             </div>
             
-            <div class="results-container">
-                <table class="results-table" id="plantillas-results-table">
+            <div class="results-container" id="macro-results-container">
+                <h3 style="margin-bottom: 10px;">Plantillas Macroscópicas</h3>
+                <table class="results-table" id="plantillas-macro-results-table">
                     <thead>
                         <tr>
                             <th>Nº</th>
                             <th>ESPECIALIDAD</th>
-                            <th>TIPO DE PLANTILLA</th>
+                            <th>NOMBRE DE PLANTILLA</th>
+                            <th>ACCIONES</th>
+                            <th>ELIMINAR</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Los datos se cargarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="results-container" id="micro-results-container" style="display: none;">
+                <h3 style="margin-bottom: 10px;">Plantillas Microscópicas</h3>
+                <table class="results-table" id="plantillas-micro-results-table">
+                    <thead>
+                        <tr>
+                            <th>Nº</th>
+                            <th>ESPECIALIDAD</th>
                             <th>NOMBRE DE PLANTILLA</th>
                             <th>ACCIONES</th>
                             <th>ELIMINAR</th>
@@ -1051,496 +1075,39 @@
     </div>
 
     <script>
-        // 🔧 FUNCIÓN PARA INICIALIZAR LA BASE DE DATOS INDEXEDDB
-        async function initializeDatabase() {
-            try {
-                // Crear o conectar a la base de datos
-                const db = new Dexie('JCPathLabDB');
-                db.version(1).stores({
-                    doctors: '++id, nombreCompleto, especialidad, clinica, fechaRegistro',
-                    templates: '++id, nombre, tipo, descripcion, contenido, fechaCreacion',
-                    patients: '++id, codAtencion, dni, nombres, apellidos, edad, telefono, sexo, familiarContacto, telefonoContacto, medicoSolicitante, fechaRegistro',
-                    surgicalReports: '++id, codAtencion, tipo, fecha, macroscopica, microscopica, diagnostico, medico, firma, fotos',
-                    cytologicalReports: '++id, codAtencion, tipo, fecha, descripcion, diagnostico, medico, firma, fotos',
-                    photos: '++id, codAtencion, imageData, timestamp'
-                });
-                
-                // Guardar datos actuales en la base de datos
-                await saveTemplatesToDatabase();
-                
-                console.log('✅ Base de datos inicializada exitosamente');
-            } catch (error) {
-                console.error('❌ Error al inicializar la base de datos:', error);
-            }
-        }
-        
-        // 💾 FUNCIÓN PARA GUARDAR PLANTILLAS EN LA BASE DE DATOS
-        async function saveTemplatesToDatabase() {
-            try {
-                const db = new Dexie('JCPathLabDB');
-                db.version(1).stores({
-                    templates: '++id, nombre, tipo, descripcion, contenido, fechaCreacion'
-                });
-                
-                // Guardar plantillas
-                if (plantillasData && plantillasData.length > 0) {
-                    await db.templates.clear();
-                    await db.templates.bulkAdd(plantillasData);
-                }
-                
-                console.log('✅ Plantillas guardadas en la base de datos');
-            } catch (error) {
-                console.error('❌ Error al guardar plantillas en la base de datos:', error);
-            }
-        }
-        
-        // 🎨 FUNCIÓN PARA APLICAR ANIMACIONES A LA PÁGINA
-        function applyPageAnimations() {
-            // Aplicar animaciones a tarjetas
-            const cards = document.querySelectorAll('.card');
-            cards.forEach((card, index) => {
-                // Retraso progresivo para efecto cascada
-                setTimeout(() => {
-                    card.classList.add('animated-fadeIn');
-                }, index * 100);
-            });
-            
-            // Aplicar animaciones a botones
-            const buttons = document.querySelectorAll('.btn, .add-template-btn');
-            buttons.forEach(button => {
-                button.classList.add('animated-pulse');
-            });
-            
-            console.log('✅ Animaciones aplicadas a la página');
-        }
-        
-        // Variables para plantillas
+        // Global state
         let plantillasData = [];
         let currentPlantillaId = null;
-        
-        // Función para cargar datos desde múltiples fuentes de almacenamiento con recuperación robusta
-        function cargarDatosAlmacenados() {
+        const token = sessionStorage.getItem('token'); // Assumes token is in sessionStorage from parent
+
+        // --- API Functions ---
+        async function fetchTemplates() {
             try {
-                console.log('📥 Iniciando carga robusta de datos de plantillas...');
-                
-                // Intentar cargar desde localStorage primero
-                let datosGuardados = localStorage.getItem('jcpathlab_plantillas');
-                
-                // Si no hay datos en localStorage, intentar desde sessionStorage
-                if (!datosGuardados) {
-                    console.log('⚠️ No se encontraron datos en localStorage, intentando sessionStorage...');
-                    datosGuardados = sessionStorage.getItem('jcpathlab_plantillas');
-                }
-                
-                // Si no hay datos en sessionStorage, intentar desde cookies
-                if (!datosGuardados) {
-                    console.log('⚠️ No se encontraron datos en sessionStorage, intentando cookies...');
-                    const cookies = document.cookie.split(';');
-                    for (let cookie of cookies) {
-                        const [name, value] = cookie.trim().split('=');
-                        if (name === 'jcpathlab_plantillas') {
-                            datosGuardados = decodeURIComponent(value);
-                            break;
-                        }
-                    }
-                }
-                
-                // Si no hay datos en cookies, intentar desde window.name
-                if (!datosGuardados) {
-                    console.log('⚠️ No se encontraron datos en cookies, intentando window.name...');
-                    try {
-                        const windowData = JSON.parse(window.name || '{}');
-                        datosGuardados = windowData.jcpathlab_plantillas;
-                    } catch (e) {
-                        console.warn('Error al parsear window.name:', e);
-                    }
-                }
-                
-                // Si no hay datos en window.name, intentar desde sessionStorage como backup
-                if (!datosGuardados) {
-                    console.log('⚠️ No se encontraron datos en window.name, intentando sessionStorage backup...');
-                    datosGuardados = sessionStorage.getItem('jcpathlab_plantillas_backup');
-                }
-                
-                // Si no hay datos en sessionStorage backup, intentar desde localStorage backup
-                if (!datosGuardados) {
-                    console.log('⚠️ No se encontraron datos en sessionStorage backup, intentando localStorage backup...');
-                    datosGuardados = localStorage.getItem('jcpathlab_plantillas_backup');
-                }
-                
-                // Si no hay datos en localStorage backup, intentar desde cookies backup
-                if (!datosGuardados) {
-                    console.log('⚠️ No se encontraron datos en localStorage backup, intentando cookies backup...');
-                    const cookies = document.cookie.split(';');
-                    for (let cookie of cookies) {
-                        const [name, value] = cookie.trim().split('=');
-                        if (name === 'jcpathlab_plantillas_backup') {
-                            datosGuardados = decodeURIComponent(value);
-                            break;
-                        }
-                    }
-                }
-                
-                if (datosGuardados) {
-                    plantillasData = JSON.parse(datosGuardados);
-                    console.log('✅ Datos de plantillas cargados exitosamente:', plantillasData.length, 'plantillas encontradas');
-                } else {
-                    console.log('ℹ️ No se encontraron datos previos, inicializando con array vacío');
-                    plantillasData = [];
-                    guardarDatos();
-                }
-            } catch (error) {
-                console.error("❌ Error al cargar datos:", error);
-                console.log('ℹ️ Inicializando con array vacío debido a error de carga');
-                plantillasData = [];
-                guardarDatos();
-            }
-        }
-        
-        // Función para guardar datos en múltiples fuentes de almacenamiento con verificación
-        function guardarDatos() {
-            try {
-                const datosString = JSON.stringify(plantillasData);
-                
-                // Guardar en localStorage
-                localStorage.setItem('jcpathlab_plantillas', datosString);
-                
-                // Guardar en sessionStorage
-                sessionStorage.setItem('jcpathlab_plantillas', datosString);
-                
-                // Guardar en cookies (con expiración de 30 días)
-                const date = new Date();
-                date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
-                const expires = "; expires=" + date.toUTCString();
-                document.cookie = "jcpathlab_plantillas=" + encodeURIComponent(datosString) + expires + "; path=/";
-                
-                // Guardar en window.name
-                try {
-                    const windowData = JSON.parse(window.name || '{}');
-                    windowData.jcpathlab_plantillas = datosString;
-                    window.name = JSON.stringify(windowData);
-                } catch (e) {
-                    console.warn('Error al guardar en window.name:', e);
-                    // Fallback: guardar directamente en window.name
-                    window.name = JSON.stringify({jcpathlab_plantillas: datosString});
-                }
-                
-                // Guardar backups adicionales
-                sessionStorage.setItem('jcpathlab_plantillas_backup', datosString);
-                localStorage.setItem('jcpathlab_plantillas_backup', datosString);
-                document.cookie = "jcpathlab_plantillas_backup=" + encodeURIComponent(datosString) + expires + "; path=/";
-                
-                console.log('💾 Datos de plantillas guardados en múltiples ubicaciones:', plantillasData.length, 'plantillas');
-            } catch (error) {
-                console.error("❌ Error al guardar datos:", error);
-                alert("Error al guardar los datos. Por favor, intente nuevamente.");
-            }
-        }
-        
-        // Función para crear un respaldo de emergencia de los datos
-        function crearRespaldoEmergencia() {
-            try {
-                const datosString = JSON.stringify(plantillasData);
-                const timestamp = new Date().toISOString();
-                const backupKey = `jcpathlab_plantillas_emergency_${timestamp}`;
-                
-                // Guardar en múltiples ubicaciones
-                localStorage.setItem(backupKey, datosString);
-                sessionStorage.setItem(backupKey, datosString);
-                
-                // Guardar en cookies si el tamaño lo permite
-                const date = new Date();
-                date.setTime(date.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 días
-                const expires = "; expires=" + date.toUTCString();
-                const encodedData = encodeURIComponent(datosString);
-                if (encodedData.length < 4000) { // Límite de cookies
-                    document.cookie = backupKey + "=" + encodedData + expires + "; path=/";
-                }
-                
-                console.log('🆘 Respaldo de emergencia creado:', backupKey);
-                return backupKey;
-            } catch (error) {
-                console.error("❌ Error al crear respaldo de emergencia:", error);
-                return null;
-            }
-        }
-        
-        // Función para recuperar datos desde un respaldo de emergencia
-        function recuperarDesdeRespaldoEmergencia() {
-            try {
-                // Buscar respaldos de emergencia en localStorage
-                const keys = Object.keys(localStorage).filter(key => 
-                    key.startsWith('jcpathlab_plantillas_emergency_')
-                ).sort().reverse();
-                
-                if (keys.length > 0) {
-                    const backupData = localStorage.getItem(keys[0]);
-                    if (backupData) {
-                        plantillasData = JSON.parse(backupData);
-                        console.log('✅ Datos recuperados desde respaldo de emergencia:', keys[0]);
-                        guardarDatos(); // Guardar los datos recuperados en todas las ubicaciones
-                        return true;
-                    }
-                }
-                
-                // Buscar respaldos en sessionStorage
-                const sessionKeys = Object.keys(sessionStorage).filter(key => 
-                    key.startsWith('jcpathlab_plantillas_emergency_')
-                ).sort().reverse();
-                
-                if (sessionKeys.length > 0) {
-                    const backupData = sessionStorage.getItem(sessionKeys[0]);
-                    if (backupData) {
-                        plantillasData = JSON.parse(backupData);
-                        console.log('✅ Datos recuperados desde respaldo de emergencia en sessionStorage:', sessionKeys[0]);
-                        guardarDatos(); // Guardar los datos recuperados en todas las ubicaciones
-                        return true;
-                    }
-                }
-                
-                // Buscar respaldos en cookies
-                const cookies = document.cookie.split(';');
-                const cookieKeys = cookies.map(cookie => {
-                    const [name] = cookie.trim().split('=');
-                    return name;
-                }).filter(name => name.startsWith('jcpathlab_plantillas_emergency_')).sort().reverse();
-                
-                if (cookieKeys.length > 0) {
-                    for (let cookieName of cookieKeys) {
-                        const cookies = document.cookie.split(';');
-                        for (let cookie of cookies) {
-                            const [name, value] = cookie.trim().split('=');
-                            if (name === cookieName) {
-                                const backupData = decodeURIComponent(value);
-                                if (backupData) {
-                                    plantillasData = JSON.parse(backupData);
-                                    console.log('✅ Datos recuperados desde respaldo de emergencia en cookies:', cookieName);
-                                    guardarDatos(); // Guardar los datos recuperados en todas las ubicaciones
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                console.log('ℹ️ No se encontraron respaldos de emergencia');
-                return false;
-            } catch (error) {
-                console.error("❌ Error al recuperar desde respaldo de emergencia:", error);
-                return false;
-            }
-        }
-        
-        // Función para verificar la integridad de los datos
-        function verificarIntegridadDatos() {
-            try {
-                const localStorageData = localStorage.getItem('jcpathlab_plantillas');
-                const sessionStorageData = sessionStorage.getItem('jcpathlab_plantillas');
-                
-                if (localStorageData && sessionStorageData) {
-                    // Verificar que ambos contengan los mismos datos
-                    if (localStorageData === sessionStorageData) {
-                        console.log('✅ Integridad de datos verificada: localStorage y sessionStorage coinciden');
-                        return true;
-                    } else {
-                        console.warn('⚠️ Inconsistencia detectada: localStorage y sessionStorage no coinciden');
-                        return false;
-                    }
-                } else if (localStorageData || sessionStorageData) {
-                    console.log('ℹ️ Solo una fuente de datos disponible, copiando a la otra');
-                    const data = localStorageData || sessionStorageData;
-                    if (data) {
-                        localStorage.setItem('jcpathlab_plantillas', data);
-                        sessionStorage.setItem('jcpathlab_plantillas', data);
-                        return true;
-                    }
-                } else {
-                    console.log('ℹ️ No hay datos en ninguna fuente');
-                    return false;
-                }
-            } catch (error) {
-                console.error("❌ Error al verificar integridad de datos:", error);
-                return false;
-            }
-        }
-        
-        // Función para cargar plantillas en la tabla
-        function cargarPlantillas() {
-            const tabla = document.getElementById('plantillas-results-table').getElementsByTagName('tbody')[0];
-            tabla.innerHTML = '';
-            
-            // Filtrar según búsqueda
-            const terminoBusqueda = document.getElementById('search-nombre-plantilla').value.toLowerCase();
-            const plantillasFiltradas = plantillasData.filter(plantilla => 
-                plantilla.nombre.toLowerCase().includes(terminoBusqueda) ||
-                plantilla.especialidad.toLowerCase().includes(terminoBusqueda)
-            );
-            
-            if (plantillasFiltradas.length === 0) {
-                tabla.innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 20px;">
-                            No se encontraron plantillas. Haga clic en "Agregar Plantilla" para crear una.
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            plantillasFiltradas.forEach((plantilla, index) => {
-                const fila = tabla.insertRow();
-                fila.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${plantilla.especialidad}</td>
-                    <td>${plantilla.tipo === 'macroscopia' ? 'Macroscopía' : 'Microscopía'}</td>
-                    <td>${plantilla.nombre}</td>
-                    <td>
-                        <button class="btn btn-primary usar-plantilla-btn" data-id="${plantilla.id}">
-                            <i class="fas fa-plus"></i> Usar
-                        </button>
-                    </td>
-                    <td>
-                        <button class="delete-btn eliminar-plantilla-btn" data-id="${plantilla.id}">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </td>
-                `;
-            });
-            
-            // Agregar event listeners a los botones
-            document.querySelectorAll('.usar-plantilla-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
-                    usarPlantilla(id);
+                const response = await fetch('https://mustafa-lackadaisical-laquita.ngrok-free.dev/api/templates', {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-            });
-            
-            document.querySelectorAll('.eliminar-plantilla-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
-                    eliminarPlantilla(id);
-                });
-            });
-        }
-        
-        // Función para usar una plantilla
-        function usarPlantilla(id) {
-            const plantilla = plantillasData.find(p => p.id === id);
-            if (plantilla) {
-                // Enviar mensaje a la página principal para usar la plantilla
-                window.parent.postMessage({
-                    type: 'USAR_PLANTILLA',
-                    data: plantilla
-                }, '*');
-            }
-        }
-        
-        // Función para eliminar una plantilla
-        function eliminarPlantilla(id) {
-            if (confirm('¿Está seguro de que desea eliminar esta plantilla?')) {
-                plantillasData = plantillasData.filter(p => p.id !== id);
-                guardarDatos();
-                cargarPlantillas();
-                alert('Plantilla eliminada correctamente');
-            }
-        }
-        
-        // Función para aplicar formato de texto - MEJORADA
-        function formatDoc(command, value = null) {
-            // Enfocar el editor activo
-            const activeEditor = document.querySelector('.editor-content:focus') || 
-                                document.getElementById('plantilla-editor') || 
-                                document.getElementById('plantilla-diagnostico');
-            
-            if (activeEditor) {
-                activeEditor.focus();
-            }
-            
-            // Aplicar comando de formato
-            try {
-                if (command === 'fontName' && value) {
-                    document.execCommand('fontName', false, value);
-                } else if (command === 'fontSize' && value) {
-                    document.execCommand('fontSize', false, value);
+                if (response.ok) {
+                    const data = await response.json();
+                    plantillasData = data.templates;
+                    renderTemplates();
+                    renderSpecialtiesDropdown(); // <-- Add this call
                 } else {
-                    document.execCommand(command, false, value);
+                    console.error('Error fetching templates:', response.statusText);
+                    alert('No se pudieron cargar las plantillas desde el servidor.');
                 }
             } catch (error) {
-                console.warn('Error aplicando formato:', command, error);
+                console.error('Error de red al cargar plantillas:', error);
+                alert('Error de conexión al cargar las plantillas.');
             }
         }
-        
-        // Función para mostrar/ocultar formulario de plantilla
-        function toggleFormularioPlantilla(mostrar) {
-            document.getElementById('template-form').style.display = mostrar ? 'block' : 'none';
-            document.getElementById('plantillas-results-table').style.display = mostrar ? 'none' : 'table';
-            document.getElementById('pagination-plant').style.display = mostrar ? 'none' : 'flex';
-            
-            if (!mostrar) {
-                // Limpiar formulario
-                document.getElementById('plantilla-especialidad').value = '';
-                document.getElementById('plantilla-nombre').value = '';
-                document.getElementById('plantilla-editor').innerHTML = '';
-                document.getElementById('plantilla-diagnostico').innerHTML = '';
-                
-                // Restablecer selección de tipo
-                document.querySelectorAll('.tipo-option').forEach(opt => {
-                    opt.classList.remove('selected');
-                });
-                document.querySelector('.tipo-option[data-tipo="macroscopia"]').classList.add('selected');
-                document.getElementById('plantilla-tipo').value = 'macroscopia';
-                document.getElementById('microscopia-fields').style.display = 'none';
-                
-                // Ocultar sección de nueva especialidad
-                document.getElementById('nueva-especialidad-section').style.display = 'none';
-                
-                currentPlantillaId = null;
-            } else {
-                // Cuando se muestra el formulario, ocultar la tabla y paginación
-                document.getElementById('plantillas-results-table').style.display = 'none';
-                document.getElementById('pagination-plant').style.display = 'none';
-            }
-        }
-        
-        // Función para cambiar entre tipos de plantilla
-        function cambiarTipoPlantilla(tipo) {
-            document.getElementById('plantilla-tipo').value = tipo;
-            
-            // Actualizar UI
-            document.querySelectorAll('.tipo-option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
-            document.querySelector(`.tipo-option[data-tipo="${tipo}"]`).classList.add('selected');
-            
-            // Mostrar/ocultar campos según el tipo
-            if (tipo === 'microscopia') {
-                document.getElementById('microscopia-fields').style.display = 'block';
-            } else {
-                document.getElementById('microscopia-fields').style.display = 'none';
-            }
-        }
-        
-        // Función para mostrar/ocultar sección de nueva especialidad
-        function toggleNuevaEspecialidad() {
-            const especialidadSelect = document.getElementById('plantilla-especialidad');
-            const nuevaEspecialidadSection = document.getElementById('nueva-especialidad-section');
-            
-            if (especialidadSelect.value === 'nueva') {
-                nuevaEspecialidadSection.style.display = 'flex';
-            } else {
-                nuevaEspecialidadSection.style.display = 'none';
-            }
-        }
-        
-        // Función para guardar plantilla
-        function guardarPlantilla() {
+
+        async function saveTemplate() {
             const tipo = document.getElementById('plantilla-tipo').value;
             let especialidad = document.getElementById('plantilla-especialidad').value;
             const nombre = document.getElementById('plantilla-nombre').value;
             const contenido = document.getElementById('plantilla-editor').innerHTML;
             const diagnostico = tipo === 'microscopia' ? document.getElementById('plantilla-diagnostico').innerHTML : '';
-            
-            // Verificar si se seleccionó "Agregar nueva especialidad"
+
             if (especialidad === 'nueva') {
                 const nuevaEspecialidad = document.getElementById('nueva-especialidad').value.trim();
                 if (!nuevaEspecialidad) {
@@ -1549,155 +1116,266 @@
                 }
                 especialidad = nuevaEspecialidad;
             }
-            
+
             if (!especialidad || !nombre || !contenido) {
                 alert('Por favor, complete todos los campos obligatorios');
                 return;
             }
-            
             if (tipo === 'microscopia' && !diagnostico) {
                 alert('Por favor, complete el campo de diagnóstico para plantillas de microscopía');
                 return;
             }
-            
-            if (currentPlantillaId) {
-                // Editar plantilla existente
-                const index = plantillasData.findIndex(p => p.id === currentPlantillaId);
-                if (index !== -1) {
-                    plantillasData[index] = {
-                        id: currentPlantillaId,
-                        tipo,
-                        especialidad,
-                        nombre,
-                        contenido,
-                        diagnostico
-                    };
+
+            const templateData = { nombre, tipo, especialidad, contenido, diagnostico };
+
+            const url = currentPlantillaId
+                ? `https://mustafa-lackadaisical-laquita.ngrok-free.dev/api/templates/${currentPlantillaId}`
+                : 'https://mustafa-lackadaisical-laquita.ngrok-free.dev/api/templates';
+            const method = currentPlantillaId ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(templateData)
+                });
+                const result = await response.json();
+                alert(result.message || result.error);
+                if (response.ok) {
+                    toggleFormularioPlantilla(false);
+                    fetchTemplates(); // Refresh list
+                    if (window.parent && window.parent.refreshTemplates) {
+                        window.parent.refreshTemplates();
+                    }
                 }
-            } else {
-                // Crear nueva plantilla
-                const nuevaPlantilla = {
-                    id: Date.now().toString(),
-                    tipo,
-                    especialidad,
-                    nombre,
-                    contenido,
-                    diagnostico,
-                    fechaCreacion: new Date().toISOString()
-                };
-                plantillasData.push(nuevaPlantilla);
+            } catch (error) {
+                console.error('Error saving template:', error);
+                alert('Error de conexión al guardar la plantilla.');
             }
-            
-            // Guardar en almacenamiento
-            guardarDatos();
-            
-            // Recargar tabla y ocultar formulario
-            cargarPlantillas();
-            toggleFormularioPlantilla(false);
-            
-            alert('Plantilla guardada correctamente');
         }
-        
-        // Inicializar página
-        document.addEventListener('DOMContentLoaded', function() {
-            // Cargar datos almacenados con sistema de recuperación robusta
-            cargarDatosAlmacenados();
-            
-            // Verificar integridad de datos
-            if (!verificarIntegridadDatos()) {
-                console.warn('⚠️ Problemas de integridad detectados, intentando recuperar desde respaldo...');
-                if (!recuperarDesdeRespaldoEmergencia()) {
-                    console.log('ℹ️ No se encontraron respaldos, continuando con datos actuales');
+
+        async function deleteTemplate(id) {
+            if (!confirm('¿Está seguro de que desea eliminar esta plantilla?')) return;
+
+            try {
+                const response = await fetch(`https://mustafa-lackadaisical-laquita.ngrok-free.dev/api/templates/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await response.json();
+                alert(result.message || result.error);
+                if (response.ok) {
+                    fetchTemplates(); // Refresh list
                 }
+            } catch (error) {
+                console.error('Error deleting template:', error);
+                alert('Error de conexión al eliminar la plantilla.');
+            }
+        }
+
+        // --- UI Functions ---
+        function renderTemplates() {
+            const macroTabla = document.getElementById('plantillas-macro-results-table').getElementsByTagName('tbody')[0];
+            const microTabla = document.getElementById('plantillas-micro-results-table').getElementsByTagName('tbody')[0];
+            macroTabla.innerHTML = '';
+            microTabla.innerHTML = '';
+
+            const terminoBusqueda = document.getElementById('search-nombre-plantilla').value.toLowerCase();
+            const plantillasFiltradas = plantillasData.filter(plantilla =>
+                plantilla.nombre.toLowerCase().includes(terminoBusqueda) ||
+                (plantilla.especialidad && plantilla.especialidad.toLowerCase().includes(terminoBusqueda))
+            );
+
+            const macroPlantillas = plantillasFiltradas.filter(p => p.tipo === 'macroscopia');
+            const microPlantillas = plantillasFiltradas.filter(p => p.tipo === 'microscopia');
+
+            if (macroPlantillas.length === 0) {
+                macroTabla.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px;">No se encontraron plantillas macroscópicas.</td></tr>`;
+            } else {
+                macroPlantillas.forEach((plantilla, index) => {
+                    const fila = macroTabla.insertRow();
+                    fila.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${plantilla.especialidad}</td>
+                        <td>${plantilla.nombre}</td>
+                        <td>
+                            <button class="btn btn-secondary editar-plantilla-btn" data-id="${plantilla.id}" style="background: #ffc107; margin-left: 5px;">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                        </td>
+                        <td>
+                            <button class="delete-btn eliminar-plantilla-btn" data-id="${plantilla.id}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                });
+            }
+
+            if (microPlantillas.length === 0) {
+                microTabla.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px;">No se encontraron plantillas microscópicas.</td></tr>`;
+            } else {
+                microPlantillas.forEach((plantilla, index) => {
+                    const fila = microTabla.insertRow();
+                    fila.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${plantilla.especialidad}</td>
+                        <td>${plantilla.nombre}</td>
+                        <td>
+                            <button class="btn btn-secondary editar-plantilla-btn" data-id="${plantilla.id}" style="background: #ffc107; margin-left: 5px;">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                        </td>
+                        <td>
+                            <button class="delete-btn eliminar-plantilla-btn" data-id="${plantilla.id}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                });
             }
             
-            // Cargar plantillas
-            cargarPlantillas();
-            
-            // Configurar botones de formato
-            document.querySelectorAll('.format-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const command = this.getAttribute('data-command');
-                    formatDoc(command);
+            // Add event listeners after rendering
+            addTableButtonListeners();
+        }
+
+        function renderSpecialtiesDropdown() {
+            const select = document.getElementById('plantilla-especialidad');
+            const currentValue = select.value; // Preserve current selection if possible
+
+            // Get unique specialties from data
+            const specialties = [...new Set(plantillasData.map(p => p.especialidad).filter(Boolean))];
+
+            // Build the new options
+            let optionsHtml = '<option value="">Seleccionar especialidad</option>';
+            specialties.forEach(s => {
+                optionsHtml += `<option value="${s}">${s}</option>`;
+            });
+            optionsHtml += '<option value="nueva">-- Agregar nueva especialidad --</option>';
+
+            select.innerHTML = optionsHtml;
+            select.value = currentValue; // Restore selection
+        }
+
+        function addTableButtonListeners() {
+            document.querySelectorAll('.eliminar-plantilla-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    deleteTemplate(this.getAttribute('data-id'));
                 });
             });
-            
-            // Configurar selectores de formato (nuevo)
-            document.querySelectorAll('.format-select').forEach(select => {
-                select.addEventListener('change', function() {
+
+            document.querySelectorAll('.editar-plantilla-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    editTemplate(this.getAttribute('data-id'));
+                });
+            });
+        }
+
+        function editTemplate(id) {
+            const plantilla = plantillasData.find(p => p.id == id);
+            if (plantilla) {
+                currentPlantillaId = id;
+                document.getElementById('plantilla-tipo').value = plantilla.tipo;
+                document.getElementById('plantilla-especialidad').value = plantilla.especialidad;
+                document.getElementById('plantilla-nombre').value = plantilla.nombre;
+                document.getElementById('plantilla-editor').innerHTML = plantilla.contenido;
+                document.getElementById('plantilla-diagnostico').innerHTML = plantilla.diagnostico || '';
+
+                cambiarTipoPlantilla(plantilla.tipo);
+                toggleFormularioPlantilla(true, true);
+            }
+        }
+
+        function toggleFormularioPlantilla(mostrar, isEdit = false) {
+            document.getElementById('template-form').style.display = mostrar ? 'block' : 'none';
+            document.getElementById('macro-results-container').style.display = mostrar ? 'none' : 'block';
+            document.getElementById('micro-results-container').style.display = 'none';
+            document.getElementById('pagination-plant').style.display = mostrar ? 'none' : 'flex';
+
+            if (!mostrar) {
+                currentPlantillaId = null;
+                document.getElementById('plantilla-especialidad').value = '';
+                document.getElementById('plantilla-nombre').value = '';
+                document.getElementById('plantilla-editor').innerHTML = '';
+                document.getElementById('plantilla-diagnostico').innerHTML = '';
+                document.getElementById('nueva-especialidad-section').style.display = 'none';
+                cambiarTipoPlantilla('macroscopia');
+            } else {
+                document.querySelector('#template-form h3').textContent = isEdit ? 'Editar Plantilla' : 'Agregar Nueva Plantilla';
+            }
+        }
+
+        function cambiarTipoPlantilla(tipo) {
+            document.getElementById('plantilla-tipo').value = tipo;
+            document.querySelectorAll('.tipo-option').forEach(opt => opt.classList.remove('selected'));
+            document.querySelector(`.tipo-option[data-tipo="${tipo}"]`).classList.add('selected');
+            document.getElementById('microscopia-fields').style.display = tipo === 'microscopia' ? 'block' : 'none';
+        }
+
+        function toggleNuevaEspecialidad() {
+            const especialidadSelect = document.getElementById('plantilla-especialidad');
+            document.getElementById('nueva-especialidad-section').style.display = especialidadSelect.value === 'nueva' ? 'flex' : 'none';
+        }
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!token) {
+                alert('Error de autenticación. Por favor, inicie sesión de nuevo.');
+                // This page is in an iframe, so we can't redirect the parent.
+                // The parent page should handle this.
+                return;
+            }
+
+            fetchTemplates();
+
+            // Event Listeners for editor toolbars
+            document.querySelectorAll('.format-btn').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault(); // Prevent loss of selection
                     const command = this.getAttribute('data-command');
-                    const value = this.value;
-                    if (value) {
-                        formatDoc(command, value);
-                        this.value = ''; // Resetear el select después de aplicar
+                    const editor = this.closest('.editor-container').querySelector('.editor-content');
+                    if (editor) {
+                        editor.focus();
+                        document.execCommand(command, false, null);
                     }
                 });
             });
-            
-            // Configurar selección de tipo
-            document.querySelectorAll('.tipo-option').forEach(option => {
-                option.addEventListener('click', function() {
-                    const tipo = this.getAttribute('data-tipo');
-                    cambiarTipoPlantilla(tipo);
+
+            document.querySelectorAll('.format-select').forEach(select => {
+                select.addEventListener('change', function(e) {
+                    e.preventDefault(); // Prevent loss of selection
+                    const command = this.getAttribute('data-command');
+                    const value = this.value;
+                    const editor = this.closest('.editor-container').querySelector('.editor-content');
+                    if (editor && value) {
+                        editor.focus();
+                        document.execCommand(command, false, value);
+                        this.value = ''; // Reset select to avoid re-applying
+                    }
                 });
             });
-            
-            // Configurar selección de especialidad
+            document.querySelectorAll('.tipo-option').forEach(option => {
+                option.addEventListener('click', function() { cambiarTipoPlantilla(this.getAttribute('data-tipo')); });
+            });
             document.getElementById('plantilla-especialidad').addEventListener('change', toggleNuevaEspecialidad);
-            
-            // Configurar botón agregar plantilla
-            document.getElementById('add-template-btn').addEventListener('click', function() {
-                toggleFormularioPlantilla(true);
-            });
-            
-            // Configurar botón ver lista de plantillas
-            document.getElementById('view-template-list-btn').addEventListener('click', function() {
+            document.getElementById('add-template-btn').addEventListener('click', () => toggleFormularioPlantilla(true, false));
+            document.getElementById('view-macro-templates-btn').addEventListener('click', () => {
                 toggleFormularioPlantilla(false);
+                document.getElementById('macro-results-container').style.display = 'block';
+                document.getElementById('micro-results-container').style.display = 'none';
             });
-            
-
-            
-            // Configurar botón cancelar
-            document.getElementById('cancelar-plantilla-btn').addEventListener('click', function() {
+            document.getElementById('view-micro-templates-btn').addEventListener('click', () => {
                 toggleFormularioPlantilla(false);
+                document.getElementById('macro-results-container').style.display = 'none';
+                document.getElementById('micro-results-container').style.display = 'block';
             });
-            
-            // Configurar botón guardar plantilla
-            document.getElementById('guardar-plantilla-btn').addEventListener('click', function() {
-                guardarPlantilla();
-                // Crear respaldo de emergencia después de guardar
-                crearRespaldoEmergencia();
+            document.getElementById('cancelar-plantilla-btn').addEventListener('click', () => toggleFormularioPlantilla(false));
+            document.getElementById('guardar-plantilla-btn').addEventListener('click', saveTemplate);
+            document.getElementById('search-btn-plant').addEventListener('click', renderTemplates);
+            document.getElementById('search-nombre-plantilla').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') renderTemplates();
             });
-            
-            // Configurar botón buscar
-            document.getElementById('search-btn-plant').addEventListener('click', function() {
-                cargarPlantillas();
-            });
-            
-            // También buscar al presionar Enter en el campo de búsqueda
-            document.getElementById('search-nombre-plantilla').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    cargarPlantillas();
-                }
-            });
-            
-            // Escuchar mensajes desde la página principal
-            window.addEventListener('message', function(event) {
-                if (event.data.type === 'CARGAR_PLANTILLAS') {
-                    cargarPlantillas();
-                }
-            });
-            
-            // Crear respaldo de emergencia periódicamente (cada 5 minutos)
-            setInterval(crearRespaldoEmergencia, 5 * 60 * 1000);
-            
-            // Inicializar base de datos IndexedDB
-            initializeDatabase();
-            
-            // Aplicar animaciones a elementos cuando la página carga
-            applyPageAnimations();
         });
-        
-
     </script>
 </body>
 </html>
