@@ -1,12 +1,14 @@
 @echo off
 setlocal
 
+echo --- SCRIPT STARTED ---
+
 REM --- CONFIGURATION ---
 set PROJECT_DIR="%~dp0"
 
 REM --- SCRIPT ---
 echo =================================================
-echo      DEPLOYMENT AUTOMATION SCRIPT (v3)
+echo      DEPLOYMENT AUTOMATION SCRIPT (v3) - DEBUG
 echo =================================================
 echo.
 
@@ -23,6 +25,7 @@ if %errorlevel% neq 0 (
     echo ERROR: Could not change to project directory.
     goto :eof
 )
+echo Current directory: %cd%
 echo OK.
 echo.
 
@@ -34,13 +37,16 @@ echo.
 
 REM 4. Start ngrok in the background
 echo [4/8] Starting ngrok...
+echo About to start ngrok in background...
 start /b ngrok.exe http 3000
+echo ngrok started in background.
 echo OK.
 echo.
 
 REM 5. Wait for ngrok to initialize
 echo [5/8] Waiting for ngrok to initialize (10 seconds)...
 timeout /t 10 /nobreak > nul
+echo Wait finished.
 echo OK.
 echo.
 
@@ -65,7 +71,7 @@ echo [7/8] Updating URLs in HTML files...
 set "FILES_TO_UPDATE=index.html pagina2.html plantillas.html resultados.html"
 for %%f in (%FILES_TO_UPDATE%) do (
     echo   - Updating %%f...
-    powershell -Command "(Get-Content -Path '%%f') -replace 'https://[a-z0-9\-]+\.ngrok-free\.dev', '%NEW_NGROK_URL%' | Set-Content -Path '%%f'"
+    powershell -Command "(Get-Content -Path '%%f') -replace 'https://[a-z0-9\\-]+\\.ngrok-free\\.dev', '%NEW_NGROK_URL%' | Set-Content -Path '%%f'"
 )
 echo OK.
 echo.
@@ -83,7 +89,9 @@ echo =================================================
 echo      DEPLOYMENT COMPLETE!
 echo =================================================
 echo.
+
 echo Your application is now live with the new URL.
 echo You can close this window.
 
 pause
+echo --- SCRIPT FINISHED ---
