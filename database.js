@@ -1,7 +1,8 @@
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcryptjs');
+require('dotenv').config();
 
-const DBSOURCE = "lab.db";
+const DBSOURCE = process.env.DB_PATH || "lab.db";
 
 const db = new sqlite3.Database(DBSOURCE, (err) => {
     if (err) {
@@ -25,7 +26,11 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
             }
             // Add default users
             const users = [
-                { user: 'josehpcastillo', pass: '41457466', role: 'admin' }
+                { 
+                    user: process.env.DEFAULT_ADMIN_USER || 'admin', 
+                    pass: process.env.DEFAULT_ADMIN_PASSWORD || 'admin123', 
+                    role: process.env.DEFAULT_ADMIN_ROLE || 'admin' 
+                }
             ];
             const selectUserSql = "SELECT * FROM users WHERE username = ?";
             const insertUserSql = 'INSERT INTO users (username, password, role) VALUES (?,?,?)';

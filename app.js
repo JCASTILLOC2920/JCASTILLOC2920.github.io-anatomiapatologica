@@ -7,6 +7,7 @@ const { verifyToken, isAdmin } = require('./authMiddleware.js');
 const sharp = require('sharp');
 const puppeteer = require('puppeteer');
 const fs = require('fs');
+require('dotenv').config();
 
 // Create reports directory if it doesn't exist
 const reportsDir = './reports';
@@ -19,8 +20,8 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 app.use(helmet());
-const port = 3000;
-const JWT_SECRET = 'your_jwt_secret_key'; // ¡Cambia esto por una clave secreta más segura!
+const port = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || 'default_jwt_secret_key';
 
 // Rate limiter for login
 const loginLimiter = rateLimit({

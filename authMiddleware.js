@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = 'your_jwt_secret_key'; // Debe ser la misma clave secreta que en app.js
+require('dotenv').config();
+const JWT_SECRET = process.env.JWT_SECRET || 'default_jwt_secret_key'; // Debe ser la misma clave secreta que en app.js
 
 const verifyToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
