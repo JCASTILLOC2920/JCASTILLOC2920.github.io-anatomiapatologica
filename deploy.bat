@@ -8,7 +8,7 @@ set PROJECT_DIR="%~dp0"
 
 REM --- SCRIPT ---
 echo =================================================
-echo      DEPLOYMENT AUTOMATION SCRIPT (v7) - DEBUG
+echo      DEPLOYMENT AUTOMATION SCRIPT (v8) - FINAL
 echo =================================================
 echo.
 
@@ -68,12 +68,10 @@ echo.
 
 REM 7. Replace the old URL in HTML files
 echo [7/8] Updating URLs in HTML files...
-set "FILES_TO_UPDATE=index.html pagina2.html plantillas.html"
+set "FILES_TO_UPDATE=index.html pagina2.html plantillas.html resultados.html"
 for %%f in (%FILES_TO_UPDATE%) do (
     echo   - Updating %%f...
-    echo     - Running PowerShell to replace URL...
-    powershell -Command "(Get-Content -Path '%%f') -replace 'https://[a-z0-9\\-]+\\.ngrok-free\\.dev', '%NEW_NGROK_URL%' | Set-Content -Path '%%f'"
-    echo     - PowerShell command finished for %%f.
+    powershell -Command "(Get-Content -Path '%%f' -Raw) -replace 'https://[a-z0-9\\-]+\\.ngrok-free\\.dev', '%NEW_NGROK_URL%' | Set-Content -Path '%%f'"
 )
 echo OK.
 echo.
