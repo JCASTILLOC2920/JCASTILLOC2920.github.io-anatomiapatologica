@@ -8,7 +8,7 @@ set PROJECT_DIR="%~dp0"
 
 REM --- SCRIPT ---
 echo =================================================
-echo      DEPLOYMENT AUTOMATION SCRIPT (v8) - FINAL
+echo      DEPLOYMENT AUTOMATION SCRIPT (v9) - FINAL
 echo =================================================
 echo.
 
